@@ -1,7 +1,7 @@
 from selenium import webdriver
 from bs4 import BeautifulSoup
-from helper import classify_trustworthiness, format_follower_count, calculate_trust_score
-from scraper.AliExpressItem import AliExpressItem
+from helper import *
+from AliExpressItem import AliExpressItem
 
 class WebScraper:
   def __init__(self, driver_path):
@@ -73,8 +73,8 @@ class WebScraper:
       followers_text = feedback[1].text
       followers = format_follower_count(followers_text)
       
-      trust_score = calculate_trust_score(followers, percentage)
-      trustworthiness = classify_trustworthiness(trust_score, isChoiceStore)
+      trust_score = calculate_trust_score_store(followers, percentage)
+      trustworthiness = classify_trustworthiness(trust_score)
       
       print("Store Name: ", storeName.text)
       print("Percentage: ", percentage)
@@ -84,15 +84,9 @@ class WebScraper:
       print("Trustworthiness: ", trustworthiness)
       
   def checkProductLegitimacy(self, soup: BeautifulSoup, item: AliExpressItem):
-    isChoice = self.isChoice(soup)
-    isPlus = self.isPlus(soup)
-    
-    item.isChoice = isChoice
-    item.isPlus = isPlus
-    
-    if isChoice:
+    if item.isChoice:
       return print('Highly Trustworthy. Recommended By AliExpress as a Choice Product.')
-    elif isPlus:
+    elif item.isPlus:
       return print('Highly Trustworthy. Recommended By AliExpress as a Plus Product.')
     else:
       rating = item.rating
@@ -100,8 +94,8 @@ class WebScraper:
       number_of_sells = item.sellsNbr
       price = item.price
       
-      trust_score = calculate_trust_score(rating, reviews_nbr, number_of_sells, price)
-      trustworthiness = classify_trustworthiness(trust_score, isChoice)
+      trust_score = calculate_trust_score_product(rating, reviews_nbr, number_of_sells, price)
+      trustworthiness = classify_trustworthiness(trust_score)
       
       item.trustScore = trust_score
       item.trustworthiness = trustworthiness
@@ -125,25 +119,49 @@ class WebScraper:
 
     title = self.fetchElement(soup, 'h1', attrs={'data-pl': 'product-title'})
     
-    realPrice = self.fetchElement(soup, 'span', attrs={'class': 'price--originalText--Zsc6sMv'})
-    discountedPrice = self.fetchElement(soup, 'div', attrs={'class': 'product-price-current'})
-    discountPercentage = self.fetchElement(soup, 'span', attrs={'class': 'price--discount--xET8qnP'})
+    itemValue = self.fetchElement(soup, 'span', attrs={'class': 'price--originalText--Zsc6sMv'})
+    itemPrice = self.fetchElement(soup, 'div', attrs={'class': 'product-price-current'})
     likes = self.fetchElement(soup, 'span', attrs={'class': 'share-and-wish--wishText--g_o_zG7'})
+    
+    productReview = self.fetchElement(soup, 'div', attrs={'data-pl': 'product-reviewer'})
+    
+    rating = productReview.findChild("strong", recursive=False).text.strip()
+    reviewNumber = productReview.findChild("a", recursive=False).text.split(' ')[0].strip()
+    sellsNumber = productReview.findChildren("span", recursive=False)[1].text.split(' ')[0]
+    
     
     # shipping = self.fetchElement(soup, 'div', attrs={'class': 'dynamic-shipping-line dynamic-shipping-titleLayout'})
     shippings = self.fetchElements(soup, 'div', attrs={'class': 'dynamic-shipping-line dynamic-shipping-contentLayout'})
     
+    isChoice = self.isChoice(soup)
+    isPlus = self.isPlus(soup)
+    
     print(f"Title: {title.text}")
-    print(f"Discount Price: {discountedPrice.text}")
-    print(f"Real Price: {realPrice.text}")
-    print(f"Discount Percentage: {discountPercentage.text}")
+    print(f"Discount Price: {itemPrice.text}")
+    print(f"Real Price: {itemValue.text}")
     print(f"Likes: {likes.text}")
+    print(f"Rating: {rating}")
+    print(f"Reviews: {reviewNumber}")
+    print(f"Sells: {sellsNumber}")
+    
+    item = AliExpressItem(
+      product_id,
+      title.text,
+      float(itemPrice.text.strip('€').replace(',', '.')),
+      float(itemValue.text.strip('€').replace(',', '.')),
+      0,
+      float(rating),
+      int(reviewNumber),
+      int(sellsNumber),
+      isChoice,
+      isPlus
+    )
     
     # print(f"Shipping: {shipping.text}")
     for shipping in shippings:
       print(f"Shipping: {shipping.text}")
     
-    self.checkStoreLegitimacy(soup)
+    # self.checkStoreLegitimacy(soup)
 
 # Usage example
 scraper = WebScraper('C:\\Users\\slaymut\\Documents\\Web Scraper Aliexpress\\aliexpress-webscraper\\chrome-driver\\chromedriver.exe')

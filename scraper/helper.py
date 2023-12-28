@@ -1,4 +1,4 @@
-def calculate_trust_score(follower_nbr, reviews_percentage):
+def calculate_trust_score_store(follower_nbr, reviews_percentage):
   followersWeight=0.33
   reviewsWeight=0.67
   
@@ -8,11 +8,11 @@ def calculate_trust_score(follower_nbr, reviews_percentage):
 
   return trust_score * 100
 
-def calculate_trust_score(rating, reviews_nbr, number_of_sells, price):
-  ratingWeight=0.1
-  reviewsWeight=0.2
-  sellsWeight=0.3
-  priceWeight=0.4
+def calculate_trust_score_product(rating, reviews_nbr, number_of_sells, price):
+  ratingWeight=0.3
+  reviewsWeight=0.3
+  sellsWeight=0.2
+  priceWeight=0.2
   
   normalizedRating = rating / 5
   normalizedReviews = reviews_nbr / 100
