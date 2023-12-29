@@ -4,19 +4,20 @@ def calculate_trust_score_store(follower_nbr, reviews_percentage):
   
   normalizedFollowers = follower_nbr / 100000
   normalizedGoodReviews = reviews_percentage / 100
+  
   trust_score = (normalizedFollowers * followersWeight) + (normalizedGoodReviews * reviewsWeight)
 
   return trust_score * 100
 
 def calculate_trust_score_product(rating, reviews_nbr, number_of_sells, price):
+  reviewsWeight=0.4
   ratingWeight=0.3
-  reviewsWeight=0.3
-  sellsWeight=0.2
   priceWeight=0.2
+  sellsWeight=0.1
   
   normalizedRating = rating / 5
-  normalizedReviews = reviews_nbr / 100
-  normalizedSells = number_of_sells / 100000
+  normalizedReviews = reviews_nbr / 1000
+  normalizedSells = number_of_sells / 5000
   normalizedPrice = price / 1000
   
   trust_score = (normalizedRating * ratingWeight) + (normalizedReviews * reviewsWeight) + (normalizedSells * sellsWeight) + (normalizedPrice * priceWeight)
@@ -32,6 +33,7 @@ def format_follower_count(follower_count):
     return int(follower_count)
   
 def classify_trustworthiness(trust_score):
+  trust_score = round(trust_score)
   if trust_score >= 90:
     return 'Highly Trustworthy'
   elif trust_score >= 80:

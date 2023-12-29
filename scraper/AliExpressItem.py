@@ -9,7 +9,7 @@ class AliExpressItem:
     rating,
     reviewsNbr,
     sellsNbr,
-    trustScore=None, 
+    trustScore=0, 
     trustworthiness=None,
     isChoice=None,
     isPlus=None, 
