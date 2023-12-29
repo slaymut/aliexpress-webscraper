@@ -6,10 +6,13 @@ class AliExpressItem:
     price,
     valuePrice,
     shippingPrice,
+    deliveryTime,
+    deliveryDates,
     rating,
     reviewsNbr,
     sellsNbr,
-    trustScore=None, 
+    freeShippingAfter=None,
+    trustScore=0, 
     trustworthiness=None,
     isChoice=None,
     isPlus=None, 
@@ -20,9 +23,12 @@ class AliExpressItem:
     self.price = price
     self.valuePrice = valuePrice
     self.shippingPrice = shippingPrice
+    self.deliveryTime = deliveryTime
+    self.deliveryDates = deliveryDates
     self.rating = rating
     self.reviewsNbr = reviewsNbr
     self.sellsNbr = sellsNbr
+    self.freeShippingAfter = freeShippingAfter
     self.trustScore = trustScore
     self.trustworthiness = trustworthiness
     self.isChoice = isChoice
