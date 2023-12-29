@@ -149,6 +149,70 @@ class WebScraper:
     
     self.checkStoreLegitimacy(store)
     
+  # Fetch the shipping data for classic labeled products
+  def fetchShippingDataClassic(self, soup: BeautifulSoup, item: AliExpressItem):
+    shippingPrice = self.fetchElement(soup, 'div', attrs={'class': 'dynamic-shipping-line dynamic-shipping-titleLayout'})
+    shippingDeliveryInfos = self.fetchElements(soup, 'div', attrs={'class': 'dynamic-shipping-line dynamic-shipping-contentLayout'})
+    
+    # Extract shipping price
+    shipping_price_match = re.search(r'Livraison:\s+([\d,]+)€', shippingPrice.text)
+    if shipping_price_match:
+      shipping_price = shipping_price_match.group(1)
+      item.shippingPrice = float(shipping_price.replace(',', '.'))
+    else:
+      item.shippingPrice = 0
+    
+    for info in shippingDeliveryInfos:
+      # Extract delivery time
+      delivery_time_match = re.search(r'Livraison en (\d+) jours', info.text)
+      if delivery_time_match:
+        delivery_time = delivery_time_match.group(1)
+        item.deliveryTime = int(delivery_time)
+      
+      # Extract delivery date
+      if "livraison le" in info.text or "livrée d'ici le" in info.text or "entre le" in info.text:
+        result = info.text.split("le", 1)[-1].strip()
+        item.deliveryDates.append(result)
+    
+    print(f"Shipping Price: {item.shippingPrice}")
+    print(f"Delivery Time: {item.deliveryTime}")
+    print(f"Delivery Date: {item.deliveryDates}")
+        
+    
+  # Fetch the shipping data for choice labeled products
+  def fetchShippingDataChoice(self, soup: BeautifulSoup, item: AliExpressItem):
+    shippings = self.fetchElements(soup, 'div', attrs={'class': 'dynamic-shipping-line dynamic-shipping-contentLayout'})
+    
+    for shipping in shippings:
+      # Extract shipping price
+      shipping_price_match = re.search(r'Livraison:\s+([\d,]+)€', shipping.text)
+      
+      if shipping_price_match:
+        shipping_price = shipping_price_match.group(1)
+        item.shippingPrice = float(shipping_price.replace(',', '.'))
+        
+        # Extract free shipping information
+        free_shipping_match = re.search(r'ou gratuite dès ([\d,]+)€', shipping.text)
+        if free_shipping_match:
+          free_shipping_threshold = free_shipping_match.group(1)
+          item.freeShippingAfter = float(free_shipping_threshold.replace(',', '.'))
+        else:
+          item.freeShippingAfter = None
+      else:
+        item.shippingPrice = 0
+
+      # Extract delivery time
+      delivery_time_match = re.search(r'Livré en (\d+) jours', shipping.text)
+      if delivery_time_match:
+        delivery_time = delivery_time_match.group(1)
+        item.deliveryTime = int(delivery_time)
+        item.deliveryDates.append(shipping.text.split("le", 1)[-1].strip())
+    
+    print(f"Shipping Price: {item.shippingPrice}")
+    print(f"Delivery Time: {item.deliveryTime}")
+    print(f"Delivery Date: {item.deliveryDates}")
+    print(f"Free Shipping Threshold: {item.freeShippingAfter}")
+    
   # Fetch the product data
   def fetchItemData(self, soup: BeautifulSoup, product_id):
     title = self.fetchElement(soup, 'h1', attrs={'data-pl': 'product-title'})
@@ -159,43 +223,56 @@ class WebScraper:
     
     productReview = self.fetchElement(soup, 'div', attrs={'data-pl': 'product-reviewer'})
     
-    rating = productReview.findChild("strong", recursive=False).text.strip()
-    reviewNumber = productReview.findChild("a", recursive=False).text.split(' ')[0].strip()
-    sellsNumber = productReview.findChildren("span", recursive=False)[1]
-    numbers = re.findall(r'\d+', sellsNumber.text)
-    sellsNumber = int(''.join(numbers))
+    rating = productReview.findChild("strong", recursive=False)
+    if rating:
+      rating = rating.text.strip()
+    else:
+      rating = 0
     
-    # shipping = self.fetchElement(soup, 'div', attrs={'class': 'dynamic-shipping-line dynamic-shipping-titleLayout'})
-    shippings = self.fetchElements(soup, 'div', attrs={'class': 'dynamic-shipping-line dynamic-shipping-contentLayout'})
+    reviewNumber = productReview.findChild("a", recursive=False)
+    if reviewNumber:
+      reviewNumber = reviewNumber.text.split(' ')[0].strip()
+    else:
+      reviewNumber = 0
+      
+    sellsNumber = productReview.findChildren("span", recursive=False)
+    if len(sellsNumber):
+      numbers = re.findall(r'\d+', sellsNumber[len(sellsNumber)-1].text)
+      sellsNumber = int(''.join(numbers))
+    else:
+      sellsNumber = 0
     
     isChoice = self.isChoice(soup)
     isPlus = self.isPlus(soup)
     
-    print(f"Title: {title.text}")
-    print(f"Discount Price: {itemPrice.text}")
-    print(f"Real Price: {itemValue.text}")
-    print(f"Likes: {likes.text}")
-    print(f"Rating: {rating}")
-    print(f"Reviews: {reviewNumber}")
-    print(f"Sells: {sellsNumber}")
+    # print(f"Title: {title.text}")
+    # print(f"Discount Price: {itemPrice.text}")
+    # print(f"Real Price: {itemValue.text}")
+    # print(f"Likes: {likes.text}")
+    # print(f"Rating: {rating}")
+    # print(f"Reviews: {reviewNumber}")
+    # print(f"Sells: {sellsNumber}")
     
     item = AliExpressItem(
-      product_id,
-      title.text,
-      float(itemPrice.text.strip('€').replace(',', '.')),
-      float(itemValue.text.strip('€').replace(',', '.')),
-      0,
-      float(rating),
-      int(reviewNumber),
-      int(sellsNumber),
-      isChoice,
-      isPlus
+      id=product_id,
+      title=title.text,
+      price=float(itemPrice.text.strip('€').replace(',', '.')),
+      valuePrice=float(itemValue.text.strip('€').replace(',', '.')),
+      shippingPrice=0,
+      deliveryTime=0,
+      deliveryDates=[],
+      rating=float(rating),
+      reviewsNbr=int(reviewNumber),
+      sellsNbr=sellsNumber,
+      isChoice=isChoice,
+      isPlus=isPlus
     )
     
-    # print(f"Shipping: {shipping.text}")
-    # for shipping in shippings:
-    #   print(f"Shipping: {shipping.text}")
-    
+    if isChoice:
+      self.fetchShippingDataChoice(soup, item)
+    else:
+      self.fetchShippingDataClassic(soup, item)
+      
     self.checkProductLegitimacy(item)
   
   def fetchAllData(self, product_id):
@@ -211,4 +288,4 @@ class WebScraper:
 
 # Usage example
 scraper = WebScraper('C:\\Users\\slaymut\\Documents\\Web Scraper Aliexpress\\aliexpress-webscraper\\chrome-driver\\chromedriver.exe')
-scraper.fetchAllData("1005005586515163")
+scraper.fetchAllData("1005004838183959")
