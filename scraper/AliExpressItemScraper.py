@@ -5,7 +5,7 @@ from AliExpressItem import AliExpressItem
 from AliExpressStore import AliExpressStore
 import re
 
-class WebScraper:
+class ItemScraper:
   def __init__(self, driver_path):
     self.driver_path = driver_path
     options = webdriver.ChromeOptions()
@@ -287,5 +287,5 @@ class WebScraper:
     self.fetchItemData(soup, product_id)
 
 # Usage example
-scraper = WebScraper('C:\\Users\\slaymut\\Documents\\Web Scraper Aliexpress\\aliexpress-webscraper\\chrome-driver\\chromedriver.exe')
+scraper = ItemScraper('C:\\Users\\slaymut\\Documents\\Web Scraper Aliexpress\\aliexpress-webscraper\\chrome-driver\\chromedriver.exe')
 scraper.fetchAllData("1005004838183959")
