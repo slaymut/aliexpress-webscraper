@@ -20,13 +20,13 @@ class Navigator:
     
   def loadAllItems(self):
     total_height = self.driver.execute_script("return document.body.scrollHeight")
-    height_iteration = total_height / 6
+    height_iteration = total_height / 12
     current_height = 0
 
     while current_height <= float(total_height):
       self.driver.execute_script(f"window.scrollTo(0, {current_height});")
       
-      # Wait until the section of the page is loaded
+      # Wait until the items on lazy load are loaded
       section_locator = (By.CLASS_NAME, 'lazy-load')
       WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(section_locator))
       
