@@ -16,22 +16,17 @@ class Navigator:
     self.driver = driver
     
   def loadAllItems(self):
-    last_height = self.driver.execute_script("return document.body.scrollHeight")
+    total_height = self.driver.execute_script("return document.body.scrollHeight")
+    height_iteration = total_height / 6
+    current_height = 0
+    SCROLL_PAUSE_TIME = 1  # Scroll Pause time
 
-    SCROLL_PAUSE_TIME = 0.5  # Define the scroll pause time
-
-    while True:
-      # Scroll down to the bottom
-      self.driver.find_element_by_tag_name('body').send_keys(Keys.END)
-      
-      # Wait to load page
+    while current_height <= float(total_height):
+      self.driver.execute_script(f"window.scrollTo(0, {current_height});")
       time.sleep(SCROLL_PAUSE_TIME)
-
-      # Calculate new scroll height and compare with last scroll height
-      new_height = self.driver.execute_script("return document.body.scrollHeight")
-      if new_height == last_height:
-        break
-      last_height = new_height
+      
+      # Scroll down by one-fourth of the page height
+      current_height += height_iteration
       
   def gatherData(self, item):
     itemFormatted = {}
