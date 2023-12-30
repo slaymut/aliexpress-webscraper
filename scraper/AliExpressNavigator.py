@@ -3,6 +3,9 @@ import time
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 
 class Navigator:
   def __init__(self, driver_path):
@@ -10,7 +13,7 @@ class Navigator:
     options = webdriver.ChromeOptions()
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--incognito')
-    options.add_argument('--headless')
+    # options.add_argument('--headless')
     
     driver = webdriver.Chrome(self.driver_path, options=options)
     self.driver = driver
@@ -19,11 +22,13 @@ class Navigator:
     total_height = self.driver.execute_script("return document.body.scrollHeight")
     height_iteration = total_height / 6
     current_height = 0
-    SCROLL_PAUSE_TIME = 1  # Scroll Pause time
 
     while current_height <= float(total_height):
       self.driver.execute_script(f"window.scrollTo(0, {current_height});")
-      time.sleep(SCROLL_PAUSE_TIME)
+      
+      # Wait until the section of the page is loaded
+      section_locator = (By.CLASS_NAME, 'lazy-load')
+      WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(section_locator))
       
       # Scroll down by one-fourth of the page height
       current_height += height_iteration
