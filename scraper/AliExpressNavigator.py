@@ -9,6 +9,7 @@ from selenium.webdriver.common.by import By
 
 import urllib.parse
 from helper import calculate_trust_score_in_list, classify_trustworthiness
+from selenium.common.exceptions import TimeoutException
 
 class Navigator:
   def __init__(self, driver_path):
@@ -25,19 +26,25 @@ class Navigator:
     total_height = self.driver.execute_script("return document.body.scrollHeight")
     height_iteration = total_height / 12
     current_height = 0
+    
+    lazy_load_items = self.driver.find_elements_by_class_name('lazy-load')
 
-    while current_height <= float(total_height):
+    while len(lazy_load_items) and current_height <= total_height:
       self.driver.execute_script(f"window.scrollTo(0, {current_height});")
       
       # Check if there are lazy-load items
       lazy_load_items = self.driver.find_elements_by_class_name('lazy-load')
-      if lazy_load_items:
-        # Wait until the items on lazy load are loaded
-        section_locator = (By.CLASS_NAME, 'lazy-load')
-        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(section_locator))
-      
-      # Scroll down by one-fourth of the page height
-      current_height += height_iteration
+      if len(lazy_load_items):
+        try:
+          # Wait until the items on lazy load are loaded
+          section_locator = (By.CLASS_NAME, 'lazy-load')
+          WebDriverWait(self.driver, 3).until(EC.presence_of_element_located(section_locator))
+        except TimeoutException:
+          break
+        # Scroll down by one-fourth of the page height
+        current_height += height_iteration
+    
+    lazy_load_items = self.driver.find_elements_by_class_name('lazy-load')
       
   def gatherData(self, item):
     itemFormatted = {}
@@ -71,7 +78,8 @@ class Navigator:
       itemFormatted['sells'] = None
       
     # Get the price
-    itemFormatted['priceSold'] = float(item.find('div', attrs={'class': 'multi--price-sale--U-S0jtj'}).text.strip('€').replace(',', '.'))
+    price_sold = item.find('div', attrs={'class': 'multi--price-sale--U-S0jtj'}).text.strip('€').replace(',', '.').replace(' ', '')
+    itemFormatted['priceSold'] = float(price_sold)
     
     # Get the original price
     priceOriginal = item.find('div', attrs={'class': 'multi--price-original--1zEQqOK'})
@@ -119,23 +127,55 @@ class Navigator:
     # Get the store name
     itemFormatted['store'] = item.find('span', attrs={'class': 'cards--store--3GyJcot'}).text.strip()
     return itemFormatted
-  
-  # # Find Similarities between items and return a list of items
-  # def findSimilarities(self, items):
+    
+  def getBestItems(self, items, number_of_items=10):
+    def trustToPriceRatio(item):
+      total_price = item['priceSold']
+      # If ShippingPrice Is Available
+      if item['shippingPrice'] is not None:
+        total_price += item['shippingPrice']
 
-  def loadSearchResults(self, searchFilter, page=1, choiceFilter=False, plusFilter=False):
+      # Avoid division by zero
+      if total_price == 0:
+        return 0
+      return item['trustScore'] / total_price
+
+    # Sort items based on trust score to total price ratio
+    sorted_items = sorted(items, key=trustToPriceRatio, reverse=True)
+    
+    return sorted_items[:number_of_items]
+   
+  def loadSearchResults(
+    self,
+    searchFilter,
+    page=1,
+    choiceFilter=False,
+    plusFilter=False,
+    freeShippingFilter=False,
+    fourStarsAndUpFilter=False,
+    maximum=0,
+    minimum=0
+  ):
     encodedSearchFilter = urllib.parse.quote(searchFilter)
+    
     selectedSwitches = ''
     if plusFilter:
-      selectedSwitches += 'mall%3Atrue%2C'
+      selectedSwitches += 'mall:true,'
     if choiceFilter:
-      selectedSwitches += 'sellPoint%3Achoice_atm%2C'
+      selectedSwitches += 'sellPoint:choice_atm,'
+    if fourStarsAndUpFilter:
+      selectedSwitches += 'pop:true,'
+    if freeShippingFilter:
+      selectedSwitches += 'freeshipping:true,'
       
-    url = f"https://fr.aliexpress.com/w/wholesale-{encodedSearchFilter}.html?page={page}&selectedSwitches={selectedSwitches}"
+    selectedSwitches = urllib.parse.quote(selectedSwitches)
+      
+    url = f"https://fr.aliexpress.com/w/wholesale-{encodedSearchFilter}.html?page={page}&selectedSwitches={selectedSwitches}&pr={minimum}-{maximum}"
 
     # Navigate to the website
     self.driver.get(url)
     
+    time.sleep(1)
     self.loadAllItems()
 
     # Use BeautifulSoup to parse the HTML content
@@ -146,14 +186,7 @@ class Navigator:
     itemsFormatted = []
     for item in items:
       itemFormatted = self.gatherData(item)
-      print(itemFormatted['trustworthiness'])
       itemsFormatted.append(itemFormatted)
       
-    # self.findSimilarities(itemsFormatted)
-      
-    print(f"Found {len(items)} elements")
+    return itemsFormatted
     
-    self.driver.close()
-    
-navigator = Navigator('C:\\Users\\slaymut\\Documents\\Web Scraper Aliexpress\\aliexpress-webscraper\\chrome-driver\\chromedriver.exe')
-navigator.loadSearchResults('meow meow')
