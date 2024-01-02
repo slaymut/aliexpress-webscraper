@@ -10,6 +10,8 @@ from selenium.webdriver.common.by import By
 import urllib.parse
 from helper import calculate_trust_score_in_list, classify_trustworthiness
 from selenium.common.exceptions import TimeoutException
+import os
+import os
 
 class Navigator:
   def __init__(self, driver_path):
@@ -189,4 +191,17 @@ class Navigator:
       itemsFormatted.append(itemFormatted)
       
     return itemsFormatted
+
+current_directory = os.getcwd()
+chrome_driver_path = os.path.join(current_directory, 'chrome-driver\\chromedriver.exe')
+
+# Exemple d'utilisation
+navigator = Navigator(chrome_driver_path)
+items = navigator.loadSearchResults('infusion thé vert', fourStarsAndUpFilter=True, minimum=0)
+print(f"Found {len(items)} elements")
     
+bestItems = navigator.getBestItems(items)
+for item in bestItems:
+  print(f"{item.get('id')} : {item.get('trustScore')} : {item.get('priceSold')}")
+  
+navigator.driver.quit()
