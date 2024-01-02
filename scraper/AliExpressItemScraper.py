@@ -1,3 +1,4 @@
+import os
 from selenium import webdriver
 from bs4 import BeautifulSoup
 from helper import *
@@ -285,7 +286,10 @@ class ItemScraper:
     
     self.fetchStoreData(soup)
     self.fetchItemData(soup, product_id)
+    
+current_directory = os.getcwd()
+chrome_driver_path = os.path.join(current_directory, 'chrome-driver\\chromedriver.exe')
 
 # Usage example
-scraper = ItemScraper('C:\\Users\\slaymut\\Documents\\Web Scraper Aliexpress\\aliexpress-webscraper\\chrome-driver\\chromedriver.exe')
+scraper = ItemScraper(chrome_driver_path)
 scraper.fetchAllData("1005004838183959")
