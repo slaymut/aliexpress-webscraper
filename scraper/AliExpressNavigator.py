@@ -24,7 +24,8 @@ class Navigator:
     driver = webdriver.Chrome(self.driver_path, options=options)
     self.driver = driver
     
-  def loadAllItems(self):
+  # Load all the items on the page
+  def loadFullPage(self):
     total_height = self.driver.execute_script("return document.body.scrollHeight")
     height_iteration = total_height / 12
     current_height = 0
@@ -48,6 +49,7 @@ class Navigator:
     
     lazy_load_items = self.driver.find_elements_by_class_name('lazy-load')
       
+  # Gather all the data from an item
   def gatherData(self, item):
     itemFormatted = {}
     # Get the title
@@ -130,6 +132,7 @@ class Navigator:
     itemFormatted['store'] = item.find('span', attrs={'class': 'cards--store--3GyJcot'}).text.strip()
     return itemFormatted
     
+  # Get the best items based on trust score to total price ratio
   def getBestItems(self, items, number_of_items=10):
     def trustToPriceRatio(item):
       total_price = item['priceSold']
@@ -147,7 +150,8 @@ class Navigator:
     
     return sorted_items[:number_of_items]
    
-  def loadSearchResults(
+  # Load the search results
+  def loadPageResults(
     self,
     searchFilter,
     page=1,
@@ -183,7 +187,11 @@ class Navigator:
     # Use BeautifulSoup to parse the HTML content
     soup = BeautifulSoup(self.driver.page_source, 'html.parser')
 
-    items = soup.find('div', attrs={'id': 'card-list'}).findChildren('div', attrs={'class': 'list--gallery--C2f2tvm search-item-card-wrapper-gallery'}, recursive=False)
+    items = soup.find(
+      'div', attrs={'id': 'card-list'}
+    ).findChildren(
+      'div', attrs={'class': 'list--gallery--C2f2tvm search-item-card-wrapper-gallery'}, recursive=False
+    )
     
     itemsFormatted = []
     for item in items:
@@ -192,10 +200,10 @@ class Navigator:
       
     return itemsFormatted
 
+# Exemple d'utilisation #
 current_directory = os.getcwd()
 chrome_driver_path = os.path.join(current_directory, 'chrome-driver\\chromedriver.exe')
 
-# Exemple d'utilisation
 navigator = Navigator(chrome_driver_path)
 items = navigator.loadSearchResults('infusion thé vert', fourStarsAndUpFilter=True, minimum=0)
 print(f"Found {len(items)} elements")
