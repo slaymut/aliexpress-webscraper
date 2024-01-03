@@ -51,7 +51,20 @@ class Navigator:
       
   # Gather all the data from an item
   def gatherData(self, item):
-    itemFormatted = {}
+    itemFormatted = {
+      'title': '',
+      'id': '',
+      'rating': None,
+      'sells': None,
+      'priceSold': 0.0,
+      'priceOriginal': None,
+      'shippingPrice': None,
+      'isChoice': None,
+      'isPlus': None,
+      'trustScore': None,
+      'trustworthiness': None,
+      'store': None
+    }
     # Get the title
     itemFormatted['title'] = item.find('h1').text.strip()
     # Get the product id
