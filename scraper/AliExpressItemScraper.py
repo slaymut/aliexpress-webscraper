@@ -222,26 +222,26 @@ class ItemScraper:
     itemPrice = self.fetchElement(soup, 'div', attrs={'class': 'product-price-current'})
     likes = self.fetchElement(soup, 'span', attrs={'class': 'share-and-wish--wishText--g_o_zG7'})
     
+    # Extract Product Review
     productReview = self.fetchElement(soup, 'div', attrs={'data-pl': 'product-reviewer'})
-    
-    rating = productReview.findChild("strong", recursive=False)
-    if rating:
-      rating = rating.text.strip()
-    else:
-      rating = 0
-    
-    reviewNumber = productReview.findChild("a", recursive=False)
-    if reviewNumber:
-      reviewNumber = reviewNumber.text.split(' ')[0].strip()
-    else:
-      reviewNumber = 0
-      
-    sellsNumber = productReview.findChildren("span", recursive=False)
-    if len(sellsNumber):
-      numbers = re.findall(r'\d+', sellsNumber[len(sellsNumber)-1].text)
-      sellsNumber = int(''.join(numbers))
-    else:
-      sellsNumber = 0
+
+    rating = 0
+    reviewNumber = 0
+    sellsNumber = 0
+
+    if productReview:
+      rating_element = productReview.findChild("strong", recursive=False)
+      if rating_element:
+        rating = rating_element.text.strip()
+
+      reviewNumber_element = productReview.findChild("a", recursive=False)
+      if reviewNumber_element:
+        reviewNumber = reviewNumber_element.text.split(' ')[0].strip()
+
+      sellsNumber_elements = productReview.findChildren("span", recursive=False)
+      if len(sellsNumber_elements):
+        numbers = re.findall(r'\d+', sellsNumber_elements[-1].text)
+        sellsNumber = int(''.join(numbers))
     
     isChoice = self.isChoice(soup)
     isPlus = self.isPlus(soup)
@@ -292,4 +292,4 @@ chrome_driver_path = os.path.join(current_directory, 'chrome-driver\\chromedrive
 
 # Usage example
 scraper = ItemScraper(chrome_driver_path)
-scraper.fetchAllData("1005004838183959")
+scraper.fetchAllData("1005005387487760")
