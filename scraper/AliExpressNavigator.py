@@ -1,4 +1,5 @@
 import re
+import csv
 import time
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -218,7 +219,7 @@ current_directory = os.getcwd()
 chrome_driver_path = os.path.join(current_directory, 'chrome-driver\\chromedriver.exe')
 
 navigator = Navigator(chrome_driver_path)
-items = navigator.loadSearchResults('infusion thé vert', fourStarsAndUpFilter=True, minimum=0)
+items = navigator.loadPageResults('infusion thé vert', fourStarsAndUpFilter=True, minimum=0)
 print(f"Found {len(items)} elements")
     
 bestItems = navigator.getBestItems(items)

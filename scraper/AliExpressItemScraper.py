@@ -1,4 +1,5 @@
 import os
+import csv
 from selenium import webdriver
 from bs4 import BeautifulSoup
 from helper import *
@@ -16,6 +17,7 @@ class ItemScraper:
     
     driver = webdriver.Chrome(self.driver_path, options=options)
     self.driver = driver
+    self.processed_products = set()
 
   def fetchElement(self, soup: BeautifulSoup, tag_name, attrs=None):
     element = soup.find(tag_name, attrs=attrs)
@@ -126,29 +128,39 @@ class ItemScraper:
       
   # Fetch the store data
   def fetchStoreData(self, soup: BeautifulSoup):
-    isChoiceStore = self.isChoiceStore(soup)
-    isPlusStore = self.isPlusStore(soup)
-    isGoldStore = self.isGoldStore(soup)
-    
-    storeName = self.fetchElement(soup, 'a', attrs={'data-pl': 'store-name'})
-    feedback = self.fetchElement(
-      soup, 'div', attrs={'class': 'store-header--text--yxM1iTQ'}
-    ).findChildren("strong", recursive=False)
+    try:
+      isChoiceStore = self.isChoiceStore(soup)
+      isPlusStore = self.isPlusStore(soup)
+      isGoldStore = self.isGoldStore(soup)
+      
+      storeName = self.fetchElement(soup, 'a', attrs={'data-pl': 'store-name'})
+      feedback = self.fetchElement(
+        soup, 'div', attrs={'class': 'store-header--text--yxM1iTQ'}
+      ).findChildren("strong", recursive=False)
 
-    percentage = float(feedback[0].text.strip('%'))
-    followers_text = feedback[1].text
-    followers = format_follower_count(followers_text)
-    
-    store = AliExpressStore(
-      storeName.text,
-      percentage,
-      isChoiceStore,
-      isPlusStore,
-      isGoldStore,
-      followers
-    )
-    
-    self.checkStoreLegitimacy(store)
+      percentage = float(feedback[0].text.strip('%'))
+      followers_text = feedback[1].text
+      followers = format_follower_count(followers_text)
+      
+      store = AliExpressStore(
+        storeName.text,
+        percentage,
+        isChoiceStore,
+        isPlusStore,
+        isGoldStore,
+        followers
+      )      
+      self.checkStoreLegitimacy(store)
+      if store:  # Assurez-vous que l'objet store a été correctement extrait
+        print("Données du magasin extraites avec succès.")
+        return store
+      else:
+        print("Échec de l'extraction des données du magasin.")
+        return None
+
+    except Exception as e:
+      print(f"Erreur lors de l'extraction des données du magasin : {e}")
+      return None
     
   # Fetch the shipping data for classic labeled products
   def fetchShippingDataClassic(self, soup: BeautifulSoup, item: AliExpressItem):
@@ -216,80 +228,144 @@ class ItemScraper:
     
   # Fetch the product data
   def fetchItemData(self, soup: BeautifulSoup, product_id):
-    title = self.fetchElement(soup, 'h1', attrs={'data-pl': 'product-title'})
-    
-    itemValue = self.fetchElement(soup, 'span', attrs={'class': 'price--originalText--Zsc6sMv'})
-    itemPrice = self.fetchElement(soup, 'div', attrs={'class': 'product-price-current'})
-    likes = self.fetchElement(soup, 'span', attrs={'class': 'share-and-wish--wishText--g_o_zG7'})
-    
-    # Extract Product Review
-    productReview = self.fetchElement(soup, 'div', attrs={'data-pl': 'product-reviewer'})
-
-    rating = 0
-    reviewNumber = 0
-    sellsNumber = 0
-
-    if productReview:
-      rating_element = productReview.findChild("strong", recursive=False)
-      if rating_element:
-        rating = rating_element.text.strip()
-
-      reviewNumber_element = productReview.findChild("a", recursive=False)
-      if reviewNumber_element:
-        reviewNumber = reviewNumber_element.text.split(' ')[0].strip()
-
-      sellsNumber_elements = productReview.findChildren("span", recursive=False)
-      if len(sellsNumber_elements):
-        numbers = re.findall(r'\d+', sellsNumber_elements[-1].text)
-        sellsNumber = int(''.join(numbers))
-    
-    isChoice = self.isChoice(soup)
-    isPlus = self.isPlus(soup)
-    
-    # print(f"Title: {title.text}")
-    # print(f"Discount Price: {itemPrice.text}")
-    # print(f"Real Price: {itemValue.text}")
-    # print(f"Likes: {likes.text}")
-    # print(f"Rating: {rating}")
-    # print(f"Reviews: {reviewNumber}")
-    # print(f"Sells: {sellsNumber}")
-    
-    item = AliExpressItem(
-      id=product_id,
-      title=title.text,
-      price=float(itemPrice.text.strip('€').replace(',', '.')),
-      valuePrice=float(itemValue.text.strip('€').replace(',', '.')),
-      shippingPrice=0,
-      deliveryTime=0,
-      deliveryDates=[],
-      rating=float(rating),
-      reviewsNbr=int(reviewNumber),
-      sellsNbr=sellsNumber,
-      isChoice=isChoice,
-      isPlus=isPlus
-    )
-    
-    if isChoice:
-      self.fetchShippingDataChoice(soup, item)
-    else:
-      self.fetchShippingDataClassic(soup, item)
+    try:
+      title = self.fetchElement(soup, 'h1', attrs={'data-pl': 'product-title'})
       
-    self.checkProductLegitimacy(item)
+      itemValue = self.fetchElement(soup, 'span', attrs={'class': 'price--originalText--Zsc6sMv'})
+      itemPrice = self.fetchElement(soup, 'div', attrs={'class': 'product-price-current'})
+      likes = self.fetchElement(soup, 'span', attrs={'class': 'share-and-wish--wishText--g_o_zG7'})
+      
+      # Extract Product Review
+      productReview = self.fetchElement(soup, 'div', attrs={'data-pl': 'product-reviewer'})
+
+      rating = 0
+      reviewNumber = 0
+      sellsNumber = 0
+
+      if productReview:
+        rating_element = productReview.findChild("strong", recursive=False)
+        if rating_element:
+          rating = rating_element.text.strip()
+
+        reviewNumber_element = productReview.findChild("a", recursive=False)
+        if reviewNumber_element:
+          reviewNumber = reviewNumber_element.text.split(' ')[0].strip()
+
+        sellsNumber_elements = productReview.findChildren("span", recursive=False)
+        if len(sellsNumber_elements):
+          numbers = re.findall(r'\d+', sellsNumber_elements[-1].text)
+          sellsNumber = int(''.join(numbers))
+      
+      isChoice = self.isChoice(soup)
+      isPlus = self.isPlus(soup)
+      
+      # print(f"Title: {title.text}")
+      # print(f"Discount Price: {itemPrice.text}")
+      # print(f"Real Price: {itemValue.text}")
+      # print(f"Likes: {likes.text}")
+      # print(f"Rating: {rating}")
+      # print(f"Reviews: {reviewNumber}")
+      # print(f"Sells: {sellsNumber}")
+      
+      item = AliExpressItem(
+        id=product_id,
+        title=title.text,
+        price=float(itemPrice.text.strip('€').replace(',', '.')),
+        valuePrice=float(itemValue.text.strip('€').replace(',', '.')),
+        shippingPrice=0,
+        deliveryTime=0,
+        deliveryDates=[],
+        rating=float(rating),
+        reviewsNbr=int(reviewNumber),
+        sellsNbr=sellsNumber,
+        isChoice=isChoice,
+        isPlus=isPlus
+      )
+      
+      if isChoice:
+        self.fetchShippingDataChoice(soup, item)
+      else:
+        self.fetchShippingDataClassic(soup, item)
+        
+      self.checkProductLegitimacy(item)
+      if item:  # Assurez-vous que l'objet item a été correctement extrait
+        print("Données de l'article extraites avec succès.")
+        return item
+      else:
+        print("Échec de l'extraction des données de l'article.")
+        return None      
+    except Exception as e:
+      print(f"Erreur lors de l'extraction des données du produit : {e}")
+      return None  
   
-  def fetchAllData(self, product_id):
+  def save_to_csv(self, item, store, filename="aliexpress_data.csv"):
+    # Vérifiez si le produit a déjà été traité
+    if item.id in self.processed_products:
+      print(f"Produit {item.id} déjà traité. Saut du traitement.")
+      return
+
+       # Ajout de l'ID du produit à l'ensemble des produits traités
+    self.processed_products.add(item.id)
+
+    try:
+      # Ajoutez des valeurs par défaut pour les champs manquants
+      item_id = item.id if item is not None else "Inconnu"
+      store_trust_score = store.trustScore if store is not None else "Inconnu"
+      # ... (autres champs) ...
+      file_exists = os.path.isfile(filename)
+      with open(filename, 'a', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        
+        if not file_exists:
+          writer.writerow(['Product ID', 'Store Trust Score', 'Store Trustworthiness', 'Shipping Price', 'Delivery Time', 'Delivery Dates', 'Product Trustworthiness'])
+
+        writer.writerow([
+          item.id, 
+          store.trustScore, 
+          store.trustworthiness, 
+          item.shippingPrice, 
+          item.deliveryTime, 
+          '; '.join(item.deliveryDates), 
+          item.trustworthiness
+          ])
+        print("Données enregistrées dans le fichier CSV.")
+    except Exception as e:
+      print(f"Erreur lors de l'enregistrement dans le fichier CSV : {e}")
+    
+
+  def fetchAllData(self, product_id,filename="aliexpress_data.csv"):
     url = f"https://fr.aliexpress.com/item/{product_id}.html"
     
     # Navigate to the website
     self.driver.get(url)
     # Use BeautifulSoup to parse the HTML content
     soup = BeautifulSoup(self.driver.page_source, 'html.parser')
+
+    print(f"Extraction des données pour le produit {product_id}...")
     
-    self.fetchStoreData(soup)
-    self.fetchItemData(soup, product_id)
+    
+    store = self.fetchStoreData(soup)
+    item = self.fetchItemData(soup, product_id)
+
+    if store and item:
+      print(f"Store and item data fetched successfully for product {product_id}. Saving to CSV...")
+      self.save_to_csv(item, store, filename)
+    else:
+       print(f"Failed to fetch store or item data for product {product_id}. Data not saved to CSV.")
+    print("Extraction process completed.")
+  
+     # Vérifiez si store et item ne sont pas None avant de sauvegarder
+    if store is not None and item is not None:
+        # Enregistrez les données dans un fichier CSV
+        self.save_to_csv(item, store, filename)
+    else:
+        print(f"Failed to fetch data for product ID {product_id}")
+
+    print("Extraction terminée.")
     
 current_directory = os.getcwd()
 chrome_driver_path = os.path.join(current_directory, 'chrome-driver\\chromedriver.exe')
 
 # Usage example
 scraper = ItemScraper(chrome_driver_path)
-scraper.fetchAllData("1005005387487760")
+scraper.fetchAllData("1005006140450119")
