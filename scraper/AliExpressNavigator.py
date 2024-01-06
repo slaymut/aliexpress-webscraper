@@ -196,7 +196,7 @@ class Navigator:
     self.driver.get(url)
     
     time.sleep(1)
-    self.loadAllItems()
+    self.loadFullPage()
 
     # Use BeautifulSoup to parse the HTML content
     soup = BeautifulSoup(self.driver.page_source, 'html.parser')
@@ -219,7 +219,7 @@ current_directory = os.getcwd()
 chrome_driver_path = os.path.join(current_directory, 'chrome-driver\\chromedriver.exe')
 
 navigator = Navigator(chrome_driver_path)
-items = navigator.loadPageResults('infusion thé vert', fourStarsAndUpFilter=True, minimum=0)
+items = navigator.loadPageResults('iphone', page=2, fourStarsAndUpFilter=True, minimum=200)
 print(f"Found {len(items)} elements")
     
 bestItems = navigator.getBestItems(items)
