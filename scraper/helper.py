@@ -2,7 +2,7 @@ def calculate_trust_score_store(follower_nbr, reviews_percentage):
   followersWeight=0.33
   reviewsWeight=0.67
   
-  normalizedFollowers = follower_nbr / 100000
+  normalizedFollowers = follower_nbr / 150000
   normalizedGoodReviews = reviews_percentage / 100
   
   trust_score = (normalizedFollowers * followersWeight) + (normalizedGoodReviews * reviewsWeight)

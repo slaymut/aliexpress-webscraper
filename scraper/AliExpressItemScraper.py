@@ -46,7 +46,7 @@ class ItemScraper:
     
   # Check if the store is a choice labeled store
   def isChoiceStore(self, soup: BeautifulSoup):
-    element = soup.find('img', attrs={'src': 'https://ae01.alicdn.com/kf/S1a258e22376e4cef8dc8bfd3fa9c3c5ep/276x96.png_.webp'})
+    element = soup.find('img', attrs={'src': 'https://ae01.alicdn.com/kf/S1a258e22376e4cef8dc8bfd3fa9c3c5ep/276x96.png_.webp', 'class': 'store-header--choiceTag--PwLr9jt'})
     
     if element:
       return True
@@ -85,19 +85,16 @@ class ItemScraper:
     if store.isChoiceStore:
       store.trustScore = 90
       store.trustworthiness = 'Highly Trustworthy. Recommended By AliExpress as a Choice Store.'
-    elif store.isPlusStore:
-      store.trustScore = 90
-      store.trustworthiness = 'Highly Trustworthy. Recommended By AliExpress as a Plus Store.'
-    elif store.isGoldStore:
-      store.trustScore = 90
-      store.trustworthiness = 'Highly Trustworthy. Recommended By AliExpress as a Plus Store.'
     else:
       percentage = store.reviewPercentage
       followers = store.followers
       
       trust_score = calculate_trust_score_store(followers, percentage)
       trustworthiness = classify_trustworthiness(trust_score)
+      
       store.trustScore = trust_score
+      if store.isPlusStore or store.isGoldStore:
+        store.trustScore += 5 if store.trustScore < 95 else 0
       store.trustworthiness = trustworthiness
       
     print("Store Trust Score: ", store.trustScore)
@@ -123,8 +120,8 @@ class ItemScraper:
       item.trustScore = trust_score
       item.trustworthiness = trustworthiness
       
-    print("Trust Score: ", item.trustScore)
-    print("Trustworthiness: ", item.trustworthiness)
+    print("Product Trust Score: ", item.trustScore)
+    print("Product Trustworthiness: ", item.trustworthiness)
       
   # Fetch the store data
   def fetchStoreData(self, soup: BeautifulSoup):
@@ -134,13 +131,18 @@ class ItemScraper:
       isGoldStore = self.isGoldStore(soup)
       
       storeName = self.fetchElement(soup, 'a', attrs={'data-pl': 'store-name'})
-      feedback = self.fetchElement(
+      feedbackElem = self.fetchElement(
         soup, 'div', attrs={'class': 'store-header--text--yxM1iTQ'}
-      ).findChildren("strong", recursive=False)
-
-      percentage = float(feedback[0].text.strip('%'))
-      followers_text = feedback[1].text
-      followers = format_follower_count(followers_text)
+      )
+      
+      feedback = None
+      percentage = None
+      followers = None
+      
+      if feedbackElem:
+        feedback = feedbackElem.findChildren("strong", recursive=False)
+        percentage = float(feedback[0].text.strip('%'))
+        followers = format_follower_count(feedback[1].text)
       
       store = AliExpressStore(
         storeName.text,
@@ -149,7 +151,8 @@ class ItemScraper:
         isPlusStore,
         isGoldStore,
         followers
-      )      
+      )
+      
       self.checkStoreLegitimacy(store)
       if store:  # Assurez-vous que l'objet store a été correctement extrait
         print("Données du magasin extraites avec succès.")
@@ -157,7 +160,6 @@ class ItemScraper:
       else:
         print("Échec de l'extraction des données du magasin.")
         return None
-
     except Exception as e:
       print(f"Erreur lors de l'extraction des données du magasin : {e}")
       return None
@@ -327,7 +329,7 @@ class ItemScraper:
           item.deliveryTime, 
           '; '.join(item.deliveryDates), 
           item.trustworthiness
-          ])
+        ])
         print("Données enregistrées dans le fichier CSV.")
     except Exception as e:
       print(f"Erreur lors de l'enregistrement dans le fichier CSV : {e}")
@@ -346,7 +348,7 @@ class ItemScraper:
     
     store = self.fetchStoreData(soup)
     item = self.fetchItemData(soup, product_id)
-
+    
     if store and item:
       print(f"Store and item data fetched successfully for product {product_id}. Saving to CSV...")
       self.save_to_csv(item, store, filename)
@@ -368,4 +370,4 @@ chrome_driver_path = os.path.join(current_directory, 'chrome-driver\\chromedrive
 
 # Usage example
 scraper = ItemScraper(chrome_driver_path)
-scraper.fetchAllData("1005006140450119")
+scraper.fetchAllData("1005005674441648")
