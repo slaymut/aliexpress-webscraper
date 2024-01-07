@@ -1,9 +1,6 @@
-import sys
+import urllib.parse
 import os
-
-# Ajouter le chemin du dossier parent au chemin de recherche des modules
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
+import sys
 import re
 import csv
 import time
@@ -12,10 +9,16 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-
-import urllib.parse
-from helper import calculate_trust_score_in_list, classify_trustworthiness
 from selenium.common.exceptions import TimeoutException
+
+print(f"Répertoire actuel dans AliExpressNavigator.py : {os.getcwd()}")
+
+# Ajouter le répertoire contenant chromedriver au PATH
+current_directory = os.path.dirname(os.path.abspath(__file__))
+chrome_driver_path = os.path.join(current_directory, 'chrome-driver.exe')
+os.environ["PATH"] += os.pathsep + current_directory
+
+from helper import calculate_trust_score_in_list, classify_trustworthiness
 
 class Navigator:
   def __init__(self, driver_path):
@@ -25,8 +28,7 @@ class Navigator:
     options.add_argument('--incognito')
     options.add_argument('--headless')
     
-    driver = webdriver.Chrome(self.driver_path, options=options)
-    self.driver = driver
+    self.driver = webdriver.Chrome(self.driver_path, options=options)
     
   # Load all the items on the page
   def loadFullPage(self):
@@ -217,16 +219,16 @@ class Navigator:
       
     return itemsFormatted
 
-# Exemple d'utilisation #
+# Exemple d'utilisation
 current_directory = os.getcwd()
 chrome_driver_path = os.path.join(current_directory, 'chrome-driver\\chromedriver.exe')
 
 navigator = Navigator(chrome_driver_path)
 items = navigator.loadPageResults('iphone', page=2, fourStarsAndUpFilter=True, minimum=200)
 print(f"Found {len(items)} elements")
-    
+
 bestItems = navigator.getBestItems(items)
 for item in bestItems:
-  print(f"{item.get('id')} : {item.get('trustScore')} : {item.get('priceSold')}")
-  
+    print(f"{item.get('id')} : {item.get('trustScore')} : {item.get('priceSold')}")
+
 navigator.driver.quit()

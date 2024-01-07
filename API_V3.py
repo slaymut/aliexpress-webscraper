@@ -1,14 +1,15 @@
 import sys
 import os
 
-# Ajouter le chemin du dossier parent au chemin de recherche des modules
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+current_directory = os.path.dirname(os.path.abspath(__file__))
+parent_directory = os.path.dirname(current_directory)
+sys.path.append(parent_directory)
 
 from flask import Flask, request, jsonify
-from scraper.AliExpressNavigator import Navigator
+from AliExpressNavigator import Navigator
 from pyspark.sql import SparkSession
-import os
 
+print(f"Chemin de recherche Python dans API_V3.py : {sys.path}")
 
 app = Flask(__name__)
 
@@ -40,7 +41,7 @@ def search_on_aliexpress():
 
         # Chemin vers le fichier ChromeDriver
         current_directory = os.getcwd()
-        chrome_driver_path = os.path.join(current_directory, 'chrome-driver\\chromedriver.exe')
+        chrome_driver_path = os.path.join(parent_directory, 'chrome-driver', 'chromedriver.exe')
 
         # Initialiser l'objet Navigator
         navigator = Navigator(chrome_driver_path)
