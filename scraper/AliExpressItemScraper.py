@@ -1,4 +1,9 @@
+import sys
 import os
+
+# Ajouter le chemin du dossier parent au chemin de recherche des modules
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import csv
 from selenium import webdriver
 from bs4 import BeautifulSoup

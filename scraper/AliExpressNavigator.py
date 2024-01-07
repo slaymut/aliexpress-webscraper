@@ -1,9 +1,14 @@
+import sys
+import os
+
+# Ajouter le chemin du dossier parent au chemin de recherche des modules
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import re
 import csv
 import time
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -11,8 +16,6 @@ from selenium.webdriver.common.by import By
 import urllib.parse
 from helper import calculate_trust_score_in_list, classify_trustworthiness
 from selenium.common.exceptions import TimeoutException
-import os
-import os
 
 class Navigator:
   def __init__(self, driver_path):
