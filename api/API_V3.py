@@ -29,6 +29,7 @@ def search_on_aliexpress():
         current_directory = os.getcwd()
         parent_directory = os.path.dirname(current_directory)
         chrome_driver_path = os.path.join(parent_directory, 'chrome-driver\\chromedriver.exe')
+        
         search_params = request.json
         search_filter = search_params.get('searchFilter', '')
         page = search_params.get('page', 1)
@@ -38,10 +39,6 @@ def search_on_aliexpress():
         four_stars_and_up_filter = search_params.get('fourStarsAndUpFilter', False)
         maximum = search_params.get('maximum', 0)
         minimum = search_params.get('minimum', 0)
-
-        # Chemin vers le fichier ChromeDriver
-        current_directory = os.getcwd()
-        chrome_driver_path = os.path.join(current_directory, 'chromedriver.exe')
 
         # Initialiser l'objet Navigator
         navigator = Navigator(chrome_driver_path)
@@ -61,7 +58,7 @@ def search_on_aliexpress():
         # Fermer le navigateur après avoir récupéré les résultats
         navigator.driver.quit()
 
-        return jsonify({'items': items})
+        return jsonify(items)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
