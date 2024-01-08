@@ -1,20 +1,18 @@
+
+import urllib.parse
 import sys
 import os
 
-# Ajouter le chemin du dossier parent au chemin de recherche des modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 import re
 import csv
 import time
+from scraper.helper import *
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-
-import urllib.parse
-from helper import calculate_trust_score_in_list, classify_trustworthiness
 from selenium.common.exceptions import TimeoutException
 
 class Navigator:
@@ -25,8 +23,7 @@ class Navigator:
     options.add_argument('--incognito')
     options.add_argument('--headless')
     
-    driver = webdriver.Chrome(self.driver_path, options=options)
-    self.driver = driver
+    self.driver = webdriver.Chrome(self.driver_path, options=options)
     
   # Load all the items on the page
   def loadFullPage(self):
@@ -214,19 +211,3 @@ class Navigator:
     for item in items:
       itemFormatted = self.gatherData(item)
       itemsFormatted.append(itemFormatted)
-      
-    return itemsFormatted
-
-# Exemple d'utilisation #
-current_directory = os.getcwd()
-chrome_driver_path = os.path.join(current_directory, 'chrome-driver\\chromedriver.exe')
-
-navigator = Navigator(chrome_driver_path)
-items = navigator.loadPageResults('iphone', page=2, fourStarsAndUpFilter=True, minimum=200)
-print(f"Found {len(items)} elements")
-    
-bestItems = navigator.getBestItems(items)
-for item in bestItems:
-  print(f"{item.get('id')} : {item.get('trustScore')} : {item.get('priceSold')}")
-  
-navigator.driver.quit()

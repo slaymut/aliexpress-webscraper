@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import csv
 from selenium import webdriver
 from bs4 import BeautifulSoup
-from helper import *
+from scraper.helper import *
 from AliExpressItem import AliExpressItem
 from AliExpressStore import AliExpressStore
 import re
@@ -367,12 +367,3 @@ class ItemScraper:
         self.save_to_csv(item, store, filename)
     else:
         print(f"Failed to fetch data for product ID {product_id}")
-
-    print("Extraction terminée.")
-    
-current_directory = os.getcwd()
-chrome_driver_path = os.path.join(current_directory, 'chrome-driver\\chromedriver.exe')
-
-# Usage example
-scraper = ItemScraper(chrome_driver_path)
-scraper.fetchAllData("1005005674441648")
