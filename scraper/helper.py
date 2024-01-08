@@ -1,3 +1,8 @@
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 def calculate_trust_score_store(follower_nbr, reviews_percentage):
   followersWeight=0.33
   reviewsWeight=0.67

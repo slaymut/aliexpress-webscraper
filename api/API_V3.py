@@ -1,12 +1,9 @@
 import sys
 import os
 
-current_directory = os.path.dirname(os.path.abspath(__file__))
-parent_directory = os.path.dirname(current_directory)
-sys.path.append(parent_directory)
-
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from flask import Flask, request, jsonify
-from AliExpressNavigator import Navigator
+from scraper.AliExpressNavigator import Navigator
 from pyspark.sql import SparkSession
 
 print(f"Chemin de recherche Python dans API_V3.py : {sys.path}")
@@ -29,6 +26,9 @@ def hello():
 def search_on_aliexpress():
     try:
         # Récupérer les paramètres de la recherche depuis le corps de la demande
+        current_directory = os.getcwd()
+        parent_directory = os.path.dirname(current_directory)
+        chrome_driver_path = os.path.join(parent_directory, 'chrome-driver\\chromedriver.exe')
         search_params = request.json
         search_filter = search_params.get('searchFilter', '')
         page = search_params.get('page', 1)
@@ -41,7 +41,7 @@ def search_on_aliexpress():
 
         # Chemin vers le fichier ChromeDriver
         current_directory = os.getcwd()
-        chrome_driver_path = os.path.join(parent_directory, 'chrome-driver', 'chromedriver.exe')
+        chrome_driver_path = os.path.join(current_directory, 'chromedriver.exe')
 
         # Initialiser l'objet Navigator
         navigator = Navigator(chrome_driver_path)
