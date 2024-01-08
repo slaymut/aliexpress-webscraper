@@ -1,3 +1,4 @@
+
 import urllib.parse
 import sys
 import os
@@ -13,9 +14,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
-
-print(f"Répertoire actuel dans AliExpressNavigator.py : {os.getcwd()}")
-
 
 class Navigator:
   def __init__(self, driver_path):
@@ -213,5 +211,3 @@ class Navigator:
     for item in items:
       itemFormatted = self.gatherData(item)
       itemsFormatted.append(itemFormatted)
-      
-    return itemsFormatted

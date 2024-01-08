@@ -367,5 +367,3 @@ class ItemScraper:
         self.save_to_csv(item, store, filename)
     else:
         print(f"Failed to fetch data for product ID {product_id}")
-
-    print("Extraction terminée.")
