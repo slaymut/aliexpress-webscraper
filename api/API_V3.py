@@ -4,6 +4,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from flask import Flask, request, jsonify
 from scraper.AliExpressNavigator import Navigator
+from scraper.AliExpressItemScraper import ItemScraper
 from pyspark.sql import SparkSession
 
 print(f"Chemin de recherche Python dans API_V3.py : {sys.path}")
@@ -21,7 +22,7 @@ def hello():
 
 #... (Définir d'autres endpoints si nécessaire)
 
-# Nouvel endpoint pour effectuer une recherche sur AliExpress
+# Endpoint pour effectuer une recherche sur AliExpress
 @app.route('/search', methods=['POST'])
 def search_on_aliexpress():
     try:
@@ -59,6 +60,29 @@ def search_on_aliexpress():
         navigator.driver.quit()
 
         return jsonify(items)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Endpoint pour le scraping d'un produit AliExpress
+@app.route('/scrape_aliexpress_product', methods=['POST'])
+def scrape_aliexpress_product():
+    try:
+        # Obtenez le produit ID à partir de la requête POST
+        data = request.get_json()
+        product_id = data.get('product_id')
+
+        # Vérifiez si l'ID du produit est présent
+        if not product_id:
+            return jsonify({'error': 'Product ID is required'}), 400
+
+        # Appel à la fonction fetchAllData du scraper
+        result = scraper.AliExpressItemScraper.fetchAllData(product_id)
+
+        if result:
+            return jsonify({'success': 'Scraping completed successfully', 'data': result}), 200
+        else:
+            return jsonify({'error': 'Failed to fetch data'}), 500
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

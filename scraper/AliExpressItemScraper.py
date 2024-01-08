@@ -8,8 +8,8 @@ import csv
 from selenium import webdriver
 from bs4 import BeautifulSoup
 from scraper.helper import *
-from AliExpressItem import AliExpressItem
-from AliExpressStore import AliExpressStore
+from scraper.AliExpressItem import AliExpressItem
+from scraper.AliExpressStore import AliExpressStore
 import re
 
 class ItemScraper:
