@@ -21,7 +21,7 @@ class Navigator:
     options = webdriver.ChromeOptions()
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--incognito')
-    options.add_argument('--headless')
+    # options.add_argument('--headless')
     
     self.driver = webdriver.Chrome(self.driver_path, options=options)
     
@@ -42,7 +42,7 @@ class Navigator:
         try:
           # Wait until the items on lazy load are loaded
           section_locator = (By.CLASS_NAME, 'lazy-load')
-          WebDriverWait(self.driver, 3).until(EC.presence_of_element_located(section_locator))
+          WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(section_locator))
         except TimeoutException:
           break
         # Scroll down by one-fourth of the page height
@@ -211,3 +211,5 @@ class Navigator:
     for item in items:
       itemFormatted = self.gatherData(item)
       itemsFormatted.append(itemFormatted)
+
+    return itemsFormatted
