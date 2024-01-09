@@ -21,7 +21,7 @@ class Navigator:
     options = webdriver.ChromeOptions()
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--incognito')
-    # options.add_argument('--headless')
+    options.add_argument('--headless')
     
     self.driver = webdriver.Chrome(self.driver_path, options=options)
     
@@ -161,6 +161,24 @@ class Navigator:
 
     # Sort items based on trust score to total price ratio
     sorted_items = sorted(items, key=trustToPriceRatio, reverse=True)
+    
+    return sorted_items[:number_of_items]
+
+  # Get the most sold items
+  def getMostSelledItems(self, items, number_of_items=10):
+    def sort_by_sells(item):
+      return item['sells']
+    
+    sorted_items = sorted(items, key=sort_by_sells, reverse=True)
+    
+    return sorted_items[:number_of_items]
+
+  # Get the best rated items
+  def getBestRatedItems(self, items, number_of_items=10):
+    def sort_by_rating(item):
+      return item['rating']
+    
+    sorted_items = sorted(items, key=sort_by_rating, reverse=True)
     
     return sorted_items[:number_of_items]
    
