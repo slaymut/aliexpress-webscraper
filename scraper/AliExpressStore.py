@@ -1,17 +1,17 @@
 import sys
 import os
-
+import json
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 class AliExpressStore:
   def __init__(
     self,
     name,
-    reviewPercentage,
     isChoiceStore,
     isPlusStore,
     isGoldStore,
-    followers,
+    reviewPercentage=None,
+    followers=None,
     id=None,
     trustScore=0,
     trustworthiness=None,
@@ -25,3 +25,18 @@ class AliExpressStore:
     self.id = id
     self.trustScore = trustScore
     self.trustworthiness = trustworthiness
+
+  def to_dict(self):
+    return {
+      'name': self.name,
+      'reviewPercentage': self.reviewPercentage,
+      'isChoiceStore': self.isChoiceStore,
+      'isPlusStore': self.isPlusStore,
+      'isGoldStore': self.isGoldStore,
+      'followers': self.followers,
+      'id': self.id,
+      'trustScore': self.trustScore,
+      'trustworthiness': self.trustworthiness
+    }
+    
+  
