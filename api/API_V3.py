@@ -68,6 +68,11 @@ def search_on_aliexpress():
 @app.route('/scrape_aliexpress_product', methods=['POST'])
 def scrape_aliexpress_product():
     try:
+        # Récupérer les paramètres de la recherche depuis le corps de la demande
+        current_directory = os.getcwd()
+        parent_directory = os.path.dirname(current_directory)
+        chrome_driver_path = os.path.join(parent_directory, 'chrome-driver\\chromedriver.exe')
+        
         # Obtenez le produit ID à partir de la requête POST
         data = request.get_json()
         product_id = data.get('product_id')
@@ -76,8 +81,14 @@ def scrape_aliexpress_product():
         if not product_id:
             return jsonify({'error': 'Product ID is required'}), 400
 
+        # Créez une instance du scraper
+        scraper_instance = ItemScraper(driver_path="votre_chemin_vers_le_driver")
+
         # Appel à la fonction fetchAllData du scraper
-        result = scraper.AliExpressItemScraper.fetchAllData(product_id)
+        result = scraper_instance.fetchAllData(product_id)
+
+        # Fermez le navigateur après avoir terminé le scraping
+        scraper_instance.driver.quit()
 
         if result:
             return jsonify({'success': 'Scraping completed successfully', 'data': result}), 200
@@ -86,6 +97,7 @@ def scrape_aliexpress_product():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
