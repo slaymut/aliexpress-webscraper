@@ -2,6 +2,8 @@ import sys
 import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from scraper.AliExpressItem import AliExpressItem
+from scraper.AliExpressStore import AliExpressStore
 from flask import Flask, request, jsonify
 from scraper.AliExpressNavigator import Navigator
 from scraper.AliExpressItemScraper import ItemScraper
@@ -87,13 +89,51 @@ def scrape_aliexpress_product():
         scraper_instance = ItemScraper(chrome_driver_path)
 
         # Appel à la fonction fetchAllData du scraper
-        result = scraper_instance.fetchAllData(product_id)
-
+        store, item = scraper_instance.fetchAllData(product_id)
+        
+        result = {
+            'store': store,
+            'item': item
+        }
+        
+        aliexpressStore = AliExpressStore(
+          name=store['name'],
+          reviewPercentage=store['reviewPercentage'],
+          isChoiceStore=store['isChoiceStore'],
+          isPlusStore=store['isPlusStore'],
+          isGoldStore=store['isGoldStore'],
+          followers=store['followers'],
+          id=store['id'],
+          trustScore=store['trustScore'],
+          trustworthiness=store['trustworthiness']
+        )
+        
+        aliexpressItem = AliExpressItem(
+          id=item['id'],
+          title=item['title'],
+          price=item['price'],
+          valuePrice=item['valuePrice'] if 'valuePrice' in item else None,
+          shippingPrice=item['shippingPrice'] if 'shippingPrice' in item else None,
+          deliveryTime=item['deliveryTime'] if 'deliveryTime' in item else None,
+          deliveryDates=item['deliveryDates'] if 'deliveryDates' in item else None,
+          rating=item['rating'] if 'rating' in item else None,
+          reviewsNbr=item['reviewsNbr'] if 'reviewsNbr' in item else None,
+          sellsNbr=item['sellsNbr'] if 'sellsNbr' in item else None,
+          freeShippingAfter=item['freeShippingAfter'] if 'freeShippingAfter' in item else None,
+          trustScore=item['trustScore'],
+          trustworthiness=item['trustworthiness'],
+          isChoice=item['isChoice'],
+          isPlus=item['isPlus'],
+          store=aliexpressStore.id
+        )
+        
+        scraper_instance.save_to_csv(aliexpressItem, aliexpressStore)
+        
         # Fermez le navigateur après avoir terminé le scraping
         scraper_instance.driver.quit()
 
         if result:
-            return jsonify({'success': 'Scraping completed successfully', 'data': result}), 200
+            return jsonify(result), 200
         else:
             return jsonify({'error': 'Failed to fetch data'}), 500
 
