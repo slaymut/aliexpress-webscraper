@@ -21,7 +21,7 @@ class Navigator:
     options = webdriver.ChromeOptions()
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--incognito')
-    # options.add_argument('--headless')
+    options.add_argument('--headless')
     
     self.driver = webdriver.Chrome(self.driver_path, options=options)
     

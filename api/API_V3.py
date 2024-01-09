@@ -20,8 +20,6 @@ def hello():
 #     .appName("SparkHadoopAPI") \
 #     .getOrCreate()
 
-#... (Définir d'autres endpoints si nécessaire)
-
 # Endpoint pour effectuer une recherche sur AliExpress
 @app.route('/search', methods=['POST'])
 def search_on_aliexpress():
@@ -33,7 +31,7 @@ def search_on_aliexpress():
         
         search_params = request.json
         search_filter = search_params.get('searchFilter', '')
-        page = search_params.get('page', 1)
+        num_pages = search_params.get('numPages', 1)  # Nouveau paramètre pour le nombre de pages
         choice_filter = search_params.get('choiceFilter', False)
         plus_filter = search_params.get('plusFilter', False)
         free_shipping_filter = search_params.get('freeShippingFilter', False)
@@ -44,17 +42,20 @@ def search_on_aliexpress():
         # Initialiser l'objet Navigator
         navigator = Navigator(chrome_driver_path)
 
-        # Charger les résultats de la recherche
-        items = navigator.loadPageResults(
-            search_filter,
-            page=page,
-            choiceFilter=choice_filter,
-            plusFilter=plus_filter,
-            freeShippingFilter=free_shipping_filter,
-            fourStarsAndUpFilter=four_stars_and_up_filter,
-            maximum=maximum,
-            minimum=minimum
-        )
+        # Charger les résultats de la recherche pour le nombre spécifié de pages
+        items = []
+        for page in range(1, num_pages + 1):
+            page_items = navigator.loadPageResults(
+                search_filter,
+                page=page,
+                choiceFilter=choice_filter,
+                plusFilter=plus_filter,
+                freeShippingFilter=free_shipping_filter,
+                fourStarsAndUpFilter=four_stars_and_up_filter,
+                maximum=maximum,
+                minimum=minimum
+            )
+            items.extend(page_items)
 
         # Fermer le navigateur après avoir récupéré les résultats
         navigator.driver.quit()
@@ -64,6 +65,7 @@ def search_on_aliexpress():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 # Endpoint pour le scraping d'un produit AliExpress
 @app.route('/scrape_aliexpress_product', methods=['POST'])
 def scrape_aliexpress_product():
@@ -72,7 +74,7 @@ def scrape_aliexpress_product():
         current_directory = os.getcwd()
         parent_directory = os.path.dirname(current_directory)
         chrome_driver_path = os.path.join(parent_directory, 'chrome-driver\\chromedriver.exe')
-        
+
         # Obtenez le produit ID à partir de la requête POST
         data = request.get_json()
         product_id = data.get('product_id')
@@ -82,7 +84,7 @@ def scrape_aliexpress_product():
             return jsonify({'error': 'Product ID is required'}), 400
 
         # Créez une instance du scraper
-        scraper_instance = ItemScraper(driver_path="votre_chemin_vers_le_driver")
+        scraper_instance = ItemScraper(chrome_driver_path)
 
         # Appel à la fonction fetchAllData du scraper
         result = scraper_instance.fetchAllData(product_id)
