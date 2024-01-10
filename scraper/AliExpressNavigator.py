@@ -181,6 +181,28 @@ class Navigator:
     sorted_items = sorted(items, key=sort_by_rating, reverse=True)
     
     return sorted_items[:number_of_items]
+  
+  def getItemsBetweenPrices(self, items, minimum, maximum):
+    def sort_by_price(item):
+      total_price = item['priceSold']
+      # If ShippingPrice Is Available
+      if item['shippingPrice'] is not None:
+        total_price += item['shippingPrice']
+      return total_price
+    
+    sorted_items = sorted(items, key=sort_by_price)
+    
+    items_between_prices = []
+    for item in sorted_items:
+      total_price = item['priceSold']
+      # If ShippingPrice Is Available
+      if item['shippingPrice'] is not None:
+        total_price += item['shippingPrice']
+      
+      if total_price >= minimum and total_price <= maximum:
+        items_between_prices.append(item)
+      
+    return items_between_prices
    
   # Load the search results
   def loadPageResults(
