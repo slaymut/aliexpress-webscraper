@@ -212,7 +212,7 @@ class Navigator:
   ):
     encodedSearchFilter = urllib.parse.quote(searchFilter)
     
-    selectedSwitches = None
+    selectedSwitches = ''
     if plusFilter:
       selectedSwitches += 'mall:true,'
     if choiceFilter:
@@ -222,10 +222,10 @@ class Navigator:
     if freeShippingFilter:
       selectedSwitches += 'freeshipping:true,'
       
-    if selectedSwitches is not None:
+    if selectedSwitches is not '':
+      selectedSwitches = selectedSwitches[:-1]
       selectedSwitches = urllib.parse.quote(selectedSwitches)
-    else:
-      selectedSwitches = ''
+      selectedSwitches = '&selectedSwitches=' + selectedSwitches
       
     actualPage = None
     if page > 1:

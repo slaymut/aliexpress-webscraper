@@ -13,7 +13,7 @@ print(f"Chemin de recherche Python dans API_V3.py : {sys.path}")
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors')
 options.add_argument('--incognito')
-options.add_argument('--headless')
+# options.add_argument('--headless')
 
 current_directory = os.getcwd()
 parent_directory = os.path.dirname(current_directory)
@@ -84,9 +84,6 @@ def search_on_aliexpress():
                 break
             else:
                 message = f"Le scraping a été effectué sur les {num_pages} pages."
-        
-        # Fermer le navigateur après avoir récupéré les résultats
-        navigator.driver.quit()
 
         return jsonify({'message': message, 'items': items})
 
