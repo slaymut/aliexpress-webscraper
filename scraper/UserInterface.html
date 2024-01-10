@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Data Display</title>
+</head>
+<body>
+    <h1>Data from Flask API</h1>
+    <div id="api-data">
+        <!-- Data will be displayed here -->
+    </div>
+
+    <script>
+        // Replace with your actual API endpoint URL
+        const apiEndpoint = 'http://127.0.0.1:5000/';
+
+        // Function to fetch and display data
+        async function fetchData() {
+          try {
+            const response = await fetch(apiEndpoint);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            document.getElementById('api-data').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+          } catch (error) {
+            console.error('Fetch error: ', error);
+            document.getElementById('api-data').innerHTML = `<p>Error fetching data: ${error.message}</p>`;
+          }
+        }
+
+        // Fetch data when the page loads
+        window.onload = fetchData;
+    </script>
+</body>
+</html>
