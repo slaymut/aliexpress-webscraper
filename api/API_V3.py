@@ -8,12 +8,14 @@ from flask import Flask, request, jsonify
 from scraper.AliExpressNavigator import Navigator
 from scraper.AliExpressItemScraper import ItemScraper
 from pyspark.sql import SparkSession
+from flask_cors import CORS
 
 print(f"Chemin de recherche Python dans API_V3.py : {sys.path}")
 
 app = Flask(__name__)
+CORS(app)
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def hello():
     return 'Bienvenue sur notre Projet BIG DATA !'
 
