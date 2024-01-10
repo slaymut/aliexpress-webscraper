@@ -16,14 +16,8 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 
 class Navigator:
-  def __init__(self, driver_path):
-    self.driver_path = driver_path
-    options = webdriver.ChromeOptions()
-    options.add_argument('--ignore-certificate-errors')
-    options.add_argument('--incognito')
-    options.add_argument('--headless')
-    
-    self.driver = webdriver.Chrome(self.driver_path, options=options)
+  def __init__(self, driver):
+    self.driver = driver
     
   # Load all the items on the page
   def loadFullPage(self):

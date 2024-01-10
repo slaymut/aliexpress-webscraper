@@ -13,14 +13,7 @@ from scraper.AliExpressStore import AliExpressStore
 import re
 
 class ItemScraper:
-  def __init__(self, driver_path):
-    self.driver_path = driver_path
-    options = webdriver.ChromeOptions()
-    options.add_argument('--ignore-certificate-errors')
-    options.add_argument('--incognito')
-    options.add_argument('--headless')
-    
-    driver = webdriver.Chrome(self.driver_path, options=options)
+  def __init__(self, driver):
     self.driver = driver
     self.processed_products = set()
 
@@ -299,51 +292,69 @@ class ItemScraper:
     except Exception as e:
       print(f"Erreur lors de l'extraction des données du produit : {e}")
       return None  
-  
-  def save_to_csv(self, item, store, filename="aliexpress_data.csv"):
-    # Vérifiez si le produit a déjà été traité
-    if item.id in self.processed_products:
-      print(f"Produit {item.id} déjà traité. Saut du traitement.")
-      return
-
-       # Ajout de l'ID du produit à l'ensemble des produits traités
-    self.processed_products.add(item.id)
-
+      
+  def save_to_csv(self, store, item, itemFileName="items_data.csv", storeFilename="stores_data.csv"):
     try:
-      # Ajoutez des valeurs par défaut pour les champs manquants
-      item_id = item.id if item is not None else "Inconnu"
-      store_trust_score = store.trustScore if store is not None else "Inconnu"
-      # ... (autres champs) ...
-      file_exists = os.path.isfile(filename)
-      with open(filename, 'a', newline='', encoding='utf-8') as file:
+      aliexpressStore = AliExpressStore(
+        name=store['name'],
+        reviewPercentage=store['reviewPercentage'],
+        isChoiceStore=store['isChoiceStore'],
+        isPlusStore=store['isPlusStore'],
+        isGoldStore=store['isGoldStore'],
+        followers=store['followers'],
+        id=store['id'],
+        trustScore=store['trustScore'],
+        trustworthiness=store['trustworthiness']
+      )
+      
+      aliexpressItem = AliExpressItem(
+        id=item['id'],
+        title=item['title'],
+        price=item['price'],
+        valuePrice=item['valuePrice'] if 'valuePrice' in item else None,
+        shippingPrice=item['shippingPrice'] if 'shippingPrice' in item else None,
+        deliveryTime=item['deliveryTime'] if 'deliveryTime' in item else None,
+        deliveryDates=item['deliveryDates'] if 'deliveryDates' in item else None,
+        rating=item['rating'] if 'rating' in item else None,
+        reviewsNbr=item['reviewsNbr'] if 'reviewsNbr' in item else None,
+        sellsNbr=item['sellsNbr'] if 'sellsNbr' in item else None,
+        freeShippingAfter=item['freeShippingAfter'] if 'freeShippingAfter' in item else None,
+        trustScore=item['trustScore'],
+        trustworthiness=item['trustworthiness'],
+        isChoice=item['isChoice'],
+        isPlus=item['isPlus'],
+        store=aliexpressStore.id
+      )
+      file_exists = os.path.isfile(storeFilename)
+      with open(storeFilename, 'a', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         
         if not file_exists:
-          writer.writerow(['Product ID', 'Store Trust Score', 'Store Trustworthiness', 'Shipping Price', 'Delivery Time', 'Delivery Dates', 'Product Trustworthiness'])
+          writer.writerow(list(aliexpressStore.__dict__.keys()))
 
-        writer.writerow([
-          item.id, 
-          store.trustScore, 
-          store.trustworthiness, 
-          item.shippingPrice, 
-          item.deliveryTime, 
-          '; '.join(item.deliveryDates), 
-          item.trustworthiness
-        ])
-        print("Données enregistrées dans le fichier CSV.")
+        writer.writerow(list(aliexpressStore.__dict__.values()))
+        print("Store saved to CSV file.")
+      
+      file_exists = os.path.isfile(itemFileName)
+      with open(itemFileName, 'a', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        
+        if not file_exists:
+          writer.writerow(list(aliexpressItem.__dict__.keys()))
+
+        writer.writerow(list(aliexpressItem.__dict__.values()))
+        print("Item saved to CSV file.")
     except Exception as e:
-      print(f"Erreur lors de l'enregistrement dans le fichier CSV : {e}")
+      print(f"Error while saving to CSV file: {e}")
     
 
-  def fetchAllData(self, product_id, filename="aliexpress_data.csv"):
+  def fetchAllData(self, product_id):
     url = f"https://fr.aliexpress.com/item/{product_id}.html"
     
     # Navigate to the website
     self.driver.get(url)
     # Use BeautifulSoup to parse the HTML content
     soup = BeautifulSoup(self.driver.page_source, 'html.parser')
-
-    print(f"Extraction des données pour le produit {product_id}...")
     
     store = self.fetchStoreData(soup)
     item = self.fetchItemData(soup, product_id)
