@@ -9,19 +9,19 @@ class AliExpressItem:
     id,
     title,
     price,
-    valuePrice,
     shippingPrice,
-    deliveryTime,
-    deliveryDates,
-    rating,
-    reviewsNbr,
-    sellsNbr,
-    freeShippingAfter=None,
+    valuePrice=-1,
+    deliveryTime=0,
+    deliveryDates=[],
+    rating=0,
+    reviewsNbr=0,
+    sellsNbr=0,
+    freeShippingAfter=-1,
     trustScore=0, 
-    trustworthiness=None,
+    trustworthiness='Highly Unworthy',
     isChoice=None,
     isPlus=None, 
-    store=None
+    store=-1
   ):
     self.id = id
     self.title = title
@@ -39,3 +39,23 @@ class AliExpressItem:
     self.isChoice = isChoice
     self.isPlus = isPlus
     self.store = store
+
+  def to_dict(self):
+    return {
+      'id': self.id,
+      'title': self.title,
+      'price': self.price,
+      'valuePrice': self.valuePrice,
+      'shippingPrice': self.shippingPrice,
+      'deliveryTime': self.deliveryTime,
+      'deliveryDates': self.deliveryDates,
+      'rating': self.rating,
+      'reviewsNbr': self.reviewsNbr,
+      'sellsNbr': self.sellsNbr,
+      'freeShippingAfter': self.freeShippingAfter,
+      'trustScore': self.trustScore,
+      'trustworthiness': self.trustworthiness,
+      'isChoice': self.isChoice,
+      'isPlus': self.isPlus,
+      'store': self.store
+    }
