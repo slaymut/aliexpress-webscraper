@@ -13,7 +13,7 @@ print(f"Chemin de recherche Python dans API_V3.py : {sys.path}")
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors')
 options.add_argument('--incognito')
-# options.add_argument('--headless')
+options.add_argument('--headless')
 
 current_directory = os.getcwd()
 parent_directory = os.path.dirname(current_directory)
@@ -84,6 +84,29 @@ def search_on_aliexpress():
                 break
             else:
                 message = f"Le scraping a été effectué sur les {num_pages} pages."
+
+        # Switch case simulé avec des conditions if-elif-else
+        sort_criteria = search_params.get('sortCriteria', 'default')
+
+        if sort_criteria == 'price_lowest':
+            items.sort(key=lambda x: x.get('price', 0))
+            # Gardez seulement les 10 premiers items
+            items = items[:10]
+        elif sort_criteria == 'price_highest':
+            items.sort(key=lambda x: x.get('price', 0), reverse=True)
+            # Gardez seulement les 10 premiers items
+            items = items[:10]
+        elif sort_criteria == 'rating_highest':
+            items.sort(key=lambda x: x.get('rating', 0), reverse=True)
+            # Gardez seulement les 10 premiers items
+            items = items[:10]
+        elif sort_criteria == 'rating_lowest':
+            items.sort(key=lambda x: x.get('rating', 0))
+            # Gardez seulement les 10 premiers items
+            items = items[:10]
+        else:
+            # Aucun tri spécifié, utilisez le tri par défaut (par ordre d'apparition dans les pages)
+            pass
 
         return jsonify({'message': message, 'items': items})
 
