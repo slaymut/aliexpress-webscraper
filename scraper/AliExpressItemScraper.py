@@ -363,4 +363,3 @@ class ItemScraper:
       return store, item
     else:
       print(f"Failed to fetch store or item data for product {product_id}. Data not saved to CSV.")
-    
