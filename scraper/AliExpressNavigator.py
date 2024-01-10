@@ -196,7 +196,7 @@ class Navigator:
   ):
     encodedSearchFilter = urllib.parse.quote(searchFilter)
     
-    selectedSwitches = ''
+    selectedSwitches = None
     if plusFilter:
       selectedSwitches += 'mall:true,'
     if choiceFilter:
@@ -206,9 +206,19 @@ class Navigator:
     if freeShippingFilter:
       selectedSwitches += 'freeshipping:true,'
       
-    selectedSwitches = urllib.parse.quote(selectedSwitches)
+    if selectedSwitches is not None:
+      selectedSwitches = urllib.parse.quote(selectedSwitches)
+    else:
+      selectedSwitches = ''
       
-    url = f"https://fr.aliexpress.com/w/wholesale-{encodedSearchFilter}.html?page={page}&selectedSwitches={selectedSwitches}&pr={minimum}-{maximum}"
+    actualPage = None
+    if page > 1:
+      actualPage = f"page={page}&"
+    else:
+      actualPage = ''
+      
+      
+    url = f"https://fr.aliexpress.com/w/wholesale-{encodedSearchFilter}.html?{actualPage}g=y&SearchText={encodedSearchFilter}{selectedSwitches}"
 
     # Navigate to the website
     self.driver.get(url)
