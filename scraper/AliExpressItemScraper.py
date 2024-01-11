@@ -11,6 +11,9 @@ from scraper.helper import *
 from scraper.AliExpressItem import AliExpressItem
 from scraper.AliExpressStore import AliExpressStore
 import re
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 class ItemScraper:
   def __init__(self, driver):
@@ -353,6 +356,11 @@ class ItemScraper:
     
     # Navigate to the website
     self.driver.get(url)
+    
+    wait = WebDriverWait(self.driver, 10)
+    wait.until(EC.presence_of_element_located((By.CLASS_NAME, "pdp-body-top-right")))
+    
+    print("meow")
     # Use BeautifulSoup to parse the HTML content
     soup = BeautifulSoup(self.driver.page_source, 'html.parser')
     

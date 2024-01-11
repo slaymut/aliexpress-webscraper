@@ -8,21 +8,25 @@ from scraper.AliExpressNavigator import Navigator
 from scraper.AliExpressItemScraper import ItemScraper
 from pyspark.sql import SparkSession
 from flask_cors import CORS
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 print(f"Chemin de recherche Python dans API_V3.py : {sys.path}")
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors')
-# options.add_argument('--incognito')
+options.add_argument('--incognito')
 # options.add_argument('--headless')
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
-options.add_argument('--pageLoadStrategy=none')  # Set pageLoadStrategy to none
+
+# Set the page load strategy to 'eager' or 'none'
+capabilities = DesiredCapabilities.CHROME
+capabilities["pageLoadStrategy"] = "eager"  # or "none"
 
 current_directory = os.getcwd()
 parent_directory = os.path.dirname(current_directory)
 chrome_driver_path = os.path.join(parent_directory, 'chrome-driver\\chromedriver.exe')
 
-driver = webdriver.Chrome(executable_path=chrome_driver_path, options=options)
+driver = webdriver.Chrome(executable_path=chrome_driver_path, options=options, desired_capabilities=capabilities)
 
 # current_directory = os.getcwd()
 # chrome_driver_path = os.path.join(current_directory, 'chrome-driver-copy/chromedriver')
@@ -115,11 +119,11 @@ def search_on_aliexpress():
             items = navigator.getBestItems(items, 10)
             pass
         
-        itemScraper = ItemScraper(driver)
-        for item in items:
-            print("Scraping item")
-            detailedStore, detailedItem = itemScraper.fetchAllData(item.get('id'))
-            itemScraper.save_to_csv(detailedStore, detailedItem)
+        # itemScraper = ItemScraper(driver)
+        # for item in items:
+        #     print("Scraping item")
+        #     detailedStore, detailedItem = itemScraper.fetchAllData(item.get('id'))
+        #     itemScraper.save_to_csv(detailedStore, detailedItem)
         
         return jsonify({'message': message, 'items': items})
     except Exception as e:
