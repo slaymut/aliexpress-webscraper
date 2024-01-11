@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AliExpress Web Interface</title>
+</head>
+<body>
+    <h1>AliExpress Web Interface</h1>
+    <form method="post">
+        {{ form.hidden_tag() }}
+        {{ form.search_filter.label }} {{ form.search_filter() }}<br>
+        {{ form.num_pages.label }} {{ form.num_pages() }}<br>
+        {{ form.choice_filter.label }} {{ form.choice_filter() }}<br>
+        {{ form.plus_filter.label }} {{ form.plus_filter() }}<br>
+        {{ form.free_shipping_filter.label }} {{ form.free_shipping_filter() }}<br>
+        {{ form.four_stars_and_up_filter.label }} {{ form.four_stars_and_up_filter() }}<br>
+        {{ form.maximum.label }} {{ form.maximum() }}<br>
+        {{ form.minimum.label }} {{ form.minimum() }}<br>
+        {{ form.sort_criteria.label }} {{ form.sort_criteria() }}<br>
+        {{ form.submit() }}
+    </form>
+</body>
+</html>
