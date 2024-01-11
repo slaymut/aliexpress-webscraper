@@ -89,21 +89,19 @@ def search_on_aliexpress():
         sort_criteria = search_params.get('sortCriteria', 'default')
 
         if sort_criteria == 'price_lowest':
-            items.sort(key=lambda x: x.get('price', 0))
-            # Gardez seulement les 10 premiers items
-            items = items[:10]
-        elif sort_criteria == 'price_highest':
-            items.sort(key=lambda x: x.get('price', 0), reverse=True)
-            # Gardez seulement les 10 premiers items
-            items = items[:10]
+            items = navigator.getBestItems(items, 10)
+
+        elif sort_criteria == 'sell_highest':
+            items = navigator.getMostSelledItems(items, 10)
+
         elif sort_criteria == 'rating_highest':
-            items.sort(key=lambda x: x.get('rating', 0), reverse=True)
-            # Gardez seulement les 10 premiers items
-            items = items[:10]
-        elif sort_criteria == 'rating_lowest':
-            items.sort(key=lambda x: x.get('rating', 0))
-            # Gardez seulement les 10 premiers items
-            items = items[:10]
+            items = navigator.getBestRatedItems(items, 10)
+            
+        # elif sort_criteria == '':
+        #     items.sort(key=lambda x: x.get('rating', 0))
+        #     # Gardez seulement les 10 premiers items
+        #     items = items[:10]
+            
         else:
             # Aucun tri spécifié, utilisez le tri par défaut (par ordre d'apparition dans les pages)
             pass
