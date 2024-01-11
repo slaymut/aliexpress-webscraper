@@ -12,19 +12,27 @@ from flask_cors import CORS
 print(f"Chemin de recherche Python dans API_V3.py : {sys.path}")
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors')
-options.add_argument('--incognito')
-options.add_argument('--headless')
+# options.add_argument('--incognito')
+# options.add_argument('--headless')
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+options.add_argument('--pageLoadStrategy=none')  # Set pageLoadStrategy to none
 
 current_directory = os.getcwd()
 parent_directory = os.path.dirname(current_directory)
 chrome_driver_path = os.path.join(parent_directory, 'chrome-driver\\chromedriver.exe')
 
-driver = webdriver.Chrome(chrome_driver_path, options=options)
+driver = webdriver.Chrome(executable_path=chrome_driver_path, options=options)
+
+# current_directory = os.getcwd()
+# chrome_driver_path = os.path.join(current_directory, 'chrome-driver-copy/chromedriver')
+
+# driver = webdriver.Chrome(executable_path=chrome_driver_path, options=options)
 
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/', methods=['GET'])
+@app.route('/')
 def hello():
     return 'Bienvenue sur notre Projet BIG DATA !'
 
@@ -32,6 +40,16 @@ def hello():
 # spark = SparkSession.builder \
 #     .appName("SparkHadoopAPI") \
 #     .getOrCreate()
+
+#Endpoint pour faire les Best-of Items
+@app.route('/best-of-items', methods=['GET'])
+def get_best_items():
+    return
+
+#Endpoint pour faire les Best-Of Stores
+@app.route('/best-of-store', methods=['GET'])
+def get_best_stores():
+    return
 
 # Endpoint pour effectuer une recherche sur AliExpress
 @app.route('/search', methods=['POST'])
@@ -52,6 +70,7 @@ def search_on_aliexpress():
         navigator = Navigator(driver)
 
         # Charger les résultats de la recherche pour le nombre spécifié de pages
+        message = ''
         items = []
         for page in range(1, num_pages + 1):
             page_items = navigator.loadPageResults(
@@ -64,10 +83,45 @@ def search_on_aliexpress():
                 maximum=maximum,
                 minimum=minimum
             )
+
+            # Arrêter le scraping si moins de 60 articles sont récupérés sur une page
+
             items.extend(page_items)
+            if len(page_items) < 60:
+                message = f"Le scraping a été interrompu sur la page {page} sur {num_pages} demandées car nous avons atteint le maximum de pages disponibles."
+                break
+            else:
+                message = f"Le scraping a été effectué sur les {num_pages} pages."
 
-        return jsonify(items)
+        # Switch case simulé avec des conditions if-elif-else
+        sort_criteria = search_params.get('sortCriteria', 'default')
 
+        if sort_criteria == 'best_offers':
+            items = navigator.getBestItems(items, 10)
+
+        elif sort_criteria == 'sell_highest':
+            items = navigator.getMostSelledItems(items, 10)
+
+        elif sort_criteria == 'rating_highest':
+            items = navigator.getBestRatedItems(items, 10)
+            
+        # elif sort_criteria == '':
+        #     items.sort(key=lambda x: x.get('rating', 0))
+        #     # Gardez seulement les 10 premiers items
+        #     items = items[:10]
+            
+        else:
+            # Aucun tri spécifié, utilisez le tri par défaut (par ordre d'apparition dans les pages)
+            items = navigator.getBestItems(items, 10)
+            pass
+        
+        itemScraper = ItemScraper(driver)
+        for item in items:
+            print("Scraping item")
+            detailedStore, detailedItem = itemScraper.fetchAllData(item.get('id'))
+            itemScraper.save_to_csv(detailedStore, detailedItem)
+        
+        return jsonify({'message': message, 'items': items})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -109,4 +163,4 @@ def scrape_aliexpress_product():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

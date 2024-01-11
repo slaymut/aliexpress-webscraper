@@ -270,8 +270,8 @@ class ItemScraper:
       item = {
         'id': product_id,
         'title': title.text,
-        'price': float(itemPrice.text.strip('€').replace(',', '.')),
-        'valuePrice': float(itemValue.text.strip('€').replace(',', '.')),
+        'price': float(itemPrice.text.replace(' ', '').strip('€').replace(',', '.')),
+        'valuePrice': float(itemValue.text.replace(' ', '').strip('€').replace(',', '.')),
         'shippingPrice': 0,
         'deliveryTime': 0,
         'deliveryDates': [],
@@ -363,4 +363,3 @@ class ItemScraper:
       return store, item
     else:
       print(f"Failed to fetch store or item data for product {product_id}. Data not saved to CSV.")
-    

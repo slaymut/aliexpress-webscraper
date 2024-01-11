@@ -63,7 +63,7 @@ class Navigator:
     # Get the title
     itemFormatted['title'] = item.find('h1').text.strip()
     # Get the product id
-    itemFormatted['id'] = item.find('a')['href'].split('/')[-1].split('?')[0]
+    itemFormatted['id'] = item.find('a')['href'].split('/')[-1].split('?')[0].split('.')[0]
     
     # Get the ratings
     ratings = item.find_all('div', attrs={'class': 'multi--evalutionModal--Ktfxu90'})
@@ -212,7 +212,7 @@ class Navigator:
   ):
     encodedSearchFilter = urllib.parse.quote(searchFilter)
     
-    selectedSwitches = None
+    selectedSwitches = ''
     if plusFilter:
       selectedSwitches += 'mall:true,'
     if choiceFilter:
@@ -222,10 +222,10 @@ class Navigator:
     if freeShippingFilter:
       selectedSwitches += 'freeshipping:true,'
       
-    if selectedSwitches is not None:
+    if selectedSwitches is not '':
+      selectedSwitches = selectedSwitches[:-1]
       selectedSwitches = urllib.parse.quote(selectedSwitches)
-    else:
-      selectedSwitches = ''
+      selectedSwitches = '&selectedSwitches=' + selectedSwitches
       
     actualPage = None
     if page > 1:
