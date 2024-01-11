@@ -13,7 +13,7 @@ print(f"Chemin de recherche Python dans API_V3.py : {sys.path}")
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors')
 options.add_argument('--incognito')
-options.add_argument('--headless')
+# options.add_argument('--headless')
 
 current_directory = os.getcwd()
 parent_directory = os.path.dirname(current_directory)
@@ -88,7 +88,7 @@ def search_on_aliexpress():
         # Switch case simulé avec des conditions if-elif-else
         sort_criteria = search_params.get('sortCriteria', 'default')
 
-        if sort_criteria == 'price_lowest':
+        if sort_criteria == 'best_offers':
             items = navigator.getBestItems(items, 10)
 
         elif sort_criteria == 'sell_highest':
@@ -104,10 +104,16 @@ def search_on_aliexpress():
             
         else:
             # Aucun tri spécifié, utilisez le tri par défaut (par ordre d'apparition dans les pages)
+            items = navigator.getBestItems(items, 10)
             pass
-
+        
+        itemScraper = ItemScraper(driver)
+        for item in items:
+            print("Scraping item")
+            detailedStore, detailedItem = itemScraper.fetchAllData(item.get('id'))
+            itemScraper.save_to_csv(detailedStore, detailedItem)
+        
         return jsonify({'message': message, 'items': items})
-
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

@@ -63,7 +63,7 @@ class Navigator:
     # Get the title
     itemFormatted['title'] = item.find('h1').text.strip()
     # Get the product id
-    itemFormatted['id'] = item.find('a')['href'].split('/')[-1].split('?')[0]
+    itemFormatted['id'] = item.find('a')['href'].split('/')[-1].split('?')[0].split('.')[0]
     
     # Get the ratings
     ratings = item.find_all('div', attrs={'class': 'multi--evalutionModal--Ktfxu90'})
