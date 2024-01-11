@@ -12,14 +12,22 @@ from flask_cors import CORS
 print(f"Chemin de recherche Python dans API_V3.py : {sys.path}")
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors')
-options.add_argument('--incognito')
+# options.add_argument('--incognito')
 # options.add_argument('--headless')
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+options.add_argument('--pageLoadStrategy=none')  # Set pageLoadStrategy to none
 
 current_directory = os.getcwd()
 parent_directory = os.path.dirname(current_directory)
 chrome_driver_path = os.path.join(parent_directory, 'chrome-driver\\chromedriver.exe')
 
-driver = webdriver.Chrome(chrome_driver_path, options=options)
+driver = webdriver.Chrome(executable_path=chrome_driver_path, options=options)
+
+# current_directory = os.getcwd()
+# chrome_driver_path = os.path.join(current_directory, 'chrome-driver-copy/chromedriver')
+
+# driver = webdriver.Chrome(executable_path=chrome_driver_path, options=options)
 
 app = Flask(__name__)
 CORS(app)
@@ -155,4 +163,4 @@ def scrape_aliexpress_product():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
