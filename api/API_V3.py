@@ -47,43 +47,19 @@ def hello():
 
 @app.route('/test', methods=['GET'])
 def test():
-    # Create a table
-    def create_table():
-        conn = psycopg2.connect(
-            dbname="aliexpressdb",
-            user="user",
-            password="password",
-            host="postgresdb"  # This is the service name defined in docker-compose.yml
-        )
-        cursor = conn.cursor()
-        cursor.execute("CREATE TABLE IF NOT EXISTS items (id SERIAL PRIMARY KEY, name VARCHAR(255), price FLOAT)")
-        cursor.execute("INSERT INTO items (name, price) VALUES (%s, %s)", ("Test", 10.2))
-        cursor.execute("INSERT INTO items (name, price) VALUES (%s, %s)", ("Test2", 20.2))
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-    # Select all records from the table
-    def select_all():
-        conn = psycopg2.connect(
-            dbname="aliexpressdb",
-            user="user",
-            password="password",
-            host="postgresdb"  # This is the service name defined in docker-compose.yml
-        )
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM items")
-        records = cursor.fetchall()
-        cursor.close()
-        conn.close()
+    conn = psycopg2.connect(
+        dbname="aliexpressdb",
+        user="user",
+        password="password",
+        host="postgresdb"  # This is the service name defined in docker-compose.yml
+    )
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM stores")
+    records = cursor.fetchall()
+    cursor.close()
+    conn.close()
         
-        return jsonify(records)
-
-    # Call the functions
-    create_table()
-    result = select_all()
-    
-    return result
+    return jsonify(records)
 
 #Endpoint pour faire les Best-of Items
 @app.route('/best-of-items', methods=['GET'])
@@ -145,26 +121,72 @@ def search_on_aliexpress():
 
         elif sort_criteria == 'sell_highest':
             items = navigator.getMostSelledItems(items, 10)
-
+            
         elif sort_criteria == 'rating_highest':
             items = navigator.getBestRatedItems(items, 10)
-            
-        # elif sort_criteria == '':
-        #     items.sort(key=lambda x: x.get('rating', 0))
-        #     # Gardez seulement les 10 premiers items
-        #     items = items[:10]
             
         else:
             # Aucun tri spécifié, utilisez le tri par défaut (par ordre d'apparition dans les pages)
             items = navigator.getBestItems(items, 10)
             pass
         
-        # itemScraper = ItemScraper(driver)
-        # for item in items:
-        #     print("Scraping item")
-        #     detailedStore, detailedItem = itemScraper.fetchAllData(item.get('id'))
-        #     itemScraper.save_to_csv(detailedStore, detailedItem)
+        itemScraper = ItemScraper(driver)
+        # Create the stores table
+        conn = psycopg2.connect(
+            dbname="aliexpressdb",
+            user="user",
+            password="password",
+            host="postgresdb"  # This is the service name defined in docker-compose.yml
+        )
+        cursor = conn.cursor()
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS stores (
+            id VARCHAR(255) PRIMARY KEY,
+            name VARCHAR(255),
+            review_percentage FLOAT,
+            is_choice_store BOOLEAN,
+            is_plus_store BOOLEAN,
+            is_gold_store BOOLEAN,
+            followers INT,
+            trust_score FLOAT,
+            trustworthiness VARCHAR(255)
+        )
+        """)
+        conn.commit()
+        cursor.close()
+
+        # Create the items table
+        cursor = conn.cursor()
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS items (
+            id VARCHAR(255) PRIMARY KEY,
+            title VARCHAR(255),
+            price FLOAT,
+            value_price FLOAT,
+            shipping_price FLOAT,
+            delivery_time INT,
+            delivery_dates VARCHAR(255),
+            rating FLOAT,
+            reviews_nbr INT,
+            sells_nbr INT,
+            free_shipping_after FLOAT,
+            trust_score FLOAT,
+            trustworthiness VARCHAR(255),
+            is_choice BOOLEAN,
+            is_plus BOOLEAN,
+            store_id VARCHAR(255),
+            FOREIGN KEY (store_id) REFERENCES stores(id)
+        )
+        """)
+        conn.commit()
+        cursor.close()
         
+        for item in items:
+            print(f"Scraping item : {item.get('id')}")
+            detailedStore, detailedItem = itemScraper.fetchAllData(item.get('id'))
+            itemScraper.save_to_database(detailedStore, detailedItem, conn)
+        
+        conn.close()
         return jsonify({'message': message, 'items': items})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -187,15 +209,20 @@ def scrape_aliexpress_product():
 
         # Appel à la fonction fetchAllData du scraper
         store, item = scraper_instance.fetchAllData(product_id)
-        scraper_instance.save_to_csv(
-            store=store,
-            item=item
+        conn = psycopg2.connect(
+            dbname="aliexpressdb",
+            user="user",
+            password="password",
+            host="postgresdb"  # This is the service name defined in docker-compose.yml
         )
+        scraper_instance.save_to_database(store, item, conn)
         
         result = {
             'store': store,
             'item': item
         }
+        
+        conn.close()
 
         if result:
             return jsonify(result), 200
