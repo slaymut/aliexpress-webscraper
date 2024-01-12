@@ -119,11 +119,11 @@ class Navigator:
       if choice:
         itemFormatted['isChoice'] = True
         itemFormatted['trustScore'] = 90
-        itemFormatted['trustworthiness'] = 'Very Trustworthy. Choice Item'
+        itemFormatted['trustworthiness'] = 'Très fiable. Article de choix'
       elif plus:
         itemFormatted['isPlus'] = True
         itemFormatted['trustScore'] = 80
-        itemFormatted['trustworthiness'] = 'Trustworthy. Plus Item'
+        itemFormatted['trustworthiness'] = 'Fiable. Article Plus'
       else:
         itemFormatted['isChoice'] = False
         itemFormatted['isPlus'] = False
@@ -134,7 +134,7 @@ class Navigator:
       itemFormatted['isChoice'] = False
       itemFormatted['isPlus'] = False
       itemFormatted['trustScore'] = 0
-      itemFormatted['trustworthiness'] = 'Highly Untrustworthy. No Shipping Information'
+      itemFormatted['trustworthiness'] = 'Très peu fiable. Aucune information sur la livraison'
       
     # Get the store name
     itemFormatted['store'] = item.find('span', attrs={'class': 'cards--store--3GyJcot'}).text.strip()

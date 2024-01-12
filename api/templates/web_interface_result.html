@@ -1,23 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AliExpress Web Interface Results</title>
+    <title>Résultats de la recherche!</title>
 </head>
 <body>
-    <h1>AliExpress Web Interface Results</h1>
+    <h1>Résultats de la recherche:</h1>
     <p>{{ message }}</p>
     
     <ul>
-        {% for data in dataFormatted %}
+        {% for data in allData %}
             <li>
                 <h4><a href="https://fr.aliexpress.com/item/{{data.item.id}}.html">{{ data.item.title }}<a/></h4>
-                <p>Price: {{ data.item.price }}</p>
-                <p>Rating: {{ data.item.rating }}</p>
-                <p>Reviews: {{ data.item.reviewsNbr }}</p>
-                <p>Number sold: {{ data.item.sellsNbr }}</p>
-                <p>Trust Score: {{ data.item.trustScore }} - {{ data.item.trustworthiness }}</p>
+                <p>Prix: {{ data.item.price }} pour {{ data.item.sellsNbr }} ventes</p>
+                <p>Avis: {{ data.item.rating }} étoiles pour {{ data.item.reviewsNbr }} avis</p>
+                <p>Score de fiabilité: {{ data.item.trustScore }} - {{ data.item.trustworthiness }}</p>
             </li>
         {% endfor %}
     </ul>

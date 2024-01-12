@@ -85,7 +85,7 @@ class ItemScraper:
   def checkStoreLegitimacy(self, store):
     if store['isChoiceStore']:
       store['trustScore'] = 90
-      store['trustworthiness'] = 'Highly Trustworthy. Recommended By AliExpress as a Choice Store.'
+      store['trustworthiness'] = 'Très fiable. Recommandé par AliExpress en tant que magasin de choix.'
     else:
       percentage = store['reviewPercentage']
       followers = store['followers']
@@ -105,7 +105,7 @@ class ItemScraper:
   def checkProductLegitimacy(self, item):
     if item['isChoice']:
       item['trustScore'] = 90
-      item['trustworthiness'] = 'Highly Trustworthy. Recommended By AliExpress as a Choice Product.'
+      item['trustworthiness'] = 'Très fiable. Recommandé par AliExpress en tant que produit de choix.'
     else:
       rating = item['rating']
       reviews_nbr = item['reviewsNbr']
@@ -120,8 +120,8 @@ class ItemScraper:
       if item['isPlus']:
         item['trustScore'] += 15 if item['trustScore'] < 85 else 0
       
-    # print("Product Trust Score: ", item['trustScore'])
-    # print("Product Trustworthiness: ", item['trustworthiness'])
+    # print("Score de confiance du produit: ", item['trustScore'])
+    # print("Fiabilité du produit: ", item['trustworthiness'])
       
   # Fetch the store data
   def fetchStoreData(self, soup: BeautifulSoup):
@@ -154,7 +154,7 @@ class ItemScraper:
         'isGoldStore': isGoldStore,
         'followers': followers,
         'trustScore': 0,
-        'trustworthiness': 'Highly Untrustworthy'
+        'trustworthiness': 'Très peu fiable'
       }
       
       self.checkStoreLegitimacy(store)

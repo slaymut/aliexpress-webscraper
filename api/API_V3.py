@@ -157,7 +157,7 @@ def home():
         conn.close()
 
         # Redirection de l'utilisateur vers une autre page
-        return render_template('web_interface_result.html', message="Scraping completed successfully!", data=dataFormatted)
+        return render_template('web_interface_result.html', message="Scraping completed successfully!", allData=dataFormatted)
 
     # Si la méthode n'est pas POST, ou si la validation du formulaire échoue
     return render_template('web_interface.html', form=form)
