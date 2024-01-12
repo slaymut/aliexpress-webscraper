@@ -239,7 +239,10 @@ class Navigator:
     # Navigate to the website
     self.driver.get(url)
     
-    time.sleep(1)
+    # Wait until the element with class "my-element" is loaded
+    wait = WebDriverWait(self.driver, 10)
+    wait.until(EC.presence_of_element_located((By.ID, "card-list")))
+    
     self.loadFullPage()
 
     # Use BeautifulSoup to parse the HTML content
