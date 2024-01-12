@@ -4,21 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AliExpress Web Interface</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            background-color: #4285f4;
+            color: #fff;
+            padding: 20px;
+            margin: 0;
+        }
+
+        form {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        input[type="submit"] {
+            background-color: #4285f4;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #357ae8;
+        }
+    </style>
 </head>
 <body>
     <h1>AliExpress Web Interface</h1>
     <form method="post">
         {{ form.hidden_tag() }}
-        {{ form.search_filter.label }} {{ form.search_filter() }}<br>
-        {{ form.num_pages.label }} {{ form.num_pages() }}<br>
-        {{ form.choice_filter.label }} {{ form.choice_filter() }}<br>
-        {{ form.plus_filter.label }} {{ form.plus_filter() }}<br>
-        {{ form.free_shipping_filter.label }} {{ form.free_shipping_filter() }}<br>
-        {{ form.four_stars_and_up_filter.label }} {{ form.four_stars_and_up_filter() }}<br>
-        {{ form.maximum.label }} {{ form.maximum() }}<br>
-        {{ form.minimum.label }} {{ form.minimum() }}<br>
-        {{ form.sort_criteria.label }} {{ form.sort_criteria() }}<br>
-        {{ form.submit() }}
+        <label for="search_filter">{{ form.search_filter.label }}</label> {{ form.search_filter() }}<br>
+        <label for="num_pages">{{ form.num_pages.label }}</label> {{ form.num_pages() }}<br>
+        
+        <label for="choice_filter">{{ form.choice_filter.label }}</label>
+        <select name="choice_filter">
+            <option value="activated">Activated</option>
+            <option value="deactivated">Deactivated</option>
+        </select><br>
+        
+        <label for="plus_filter">{{ form.plus_filter.label }}</label>
+        <select name="plus_filter">
+            <option value="activated">Activated</option>
+            <option value="deactivated">Deactivated</option>
+        </select><br>
+        
+        <label for="free_shipping_filter">{{ form.free_shipping_filter.label }}</label> {{ form.free_shipping_filter() }}<br>
+        <label for="four_stars_and_up_filter">{{ form.four_stars_and_up_filter.label }}</label> {{ form.four_stars_and_up_filter() }}<br>
+        <label for="maximum">{{ form.maximum.label }}</label> {{ form.maximum() }}<br>
+        <label for="minimum">{{ form.minimum.label }}</label> {{ form.minimum() }}<br>
+        
+        <label for="sort_criteria">{{ form.sort_criteria.label }}</label>
+        <select name="sort_criteria">
+            <option value="best_offers">Best Offers</option>
+            <option value="sell_highest">Sell Highest</option>
+            <option value="rating_highest">Rating Highest</option>
+        </select><br>
+        
+        <input type="submit" value="{{ form.submit.label }}">
     </form>
 </body>
 </html>
