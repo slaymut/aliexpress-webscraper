@@ -71,26 +71,38 @@
         
         <label for="choice_filter">{{ form.choice_filter.label }}</label>
         <select name="choice_filter">
-            <option value="false">Deactivated</option>
-            <option value="true">Activated</option>
+            <option value="false">Désactivé</option>
+            <option value="true">Activé</option>
         </select><br>
         
         <label for="plus_filter">{{ form.plus_filter.label }}</label>
         <select name="plus_filter">
-            <option value="false">Deactivated</option>
-            <option value="true">Activated</option>
+            <option value="false">Désactivé</option>
+            <option value="true">Activé</option>
+        </select><br>
+
+        <label for="free_shipping_filter">{{ form.free_shipping_filter.label }}</label>
+        <select name="free_shipping_filter">
+            <option value="deactivated">Désactivé</option>
+            <option value="activated">Activé</option>
+            
+        </select><br>
+
+        <label for="four_stars_and_up_filter">{{ form.four_stars_and_up_filter.label }}</label>
+        <select name="four_stars_and_up_filter">
+            <option value="deactivated">Désactivé</option>
+            <option value="activated">Activé</option>
         </select><br>
         
-        <label for="free_shipping_filter">{{ form.free_shipping_filter.label }}</label> {{ form.free_shipping_filter() }}<br>
-        <label for="four_stars_and_up_filter">{{ form.four_stars_and_up_filter.label }}</label> {{ form.four_stars_and_up_filter() }}<br>
-        <label for="maximum">{{ form.maximum.label }}</label> {{ form.maximum() }}<br>
-        <label for="minimum">{{ form.minimum.label }}</label> {{ form.minimum() }}<br>
+        <label for="maximum">{{ form.maximum.label }}</label> {{ form.maximum(value=0) }}<br>
+        <label for="minimum">{{ form.minimum.label }}</label> {{ form.minimum(value=0) }}<br>
+
         
         <label for="sort_criteria">{{ form.sort_criteria.label }}</label>
         <select name="sort_criteria">
-            <option value="best_offers">Best Offers</option>
-            <option value="sell_highest">Sell Highest</option>
-            <option value="rating_highest">Rating Highest</option>
+            <option value="best_offers">Meilleur offres</option>
+            <option value="sell_highest">Meilleur ventes</option>
+            <option value="rating_highest">Meilleur notes</option>
         </select><br>
         
         <input type="submit" value="{{ form.submit.label }}">
