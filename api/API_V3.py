@@ -4,11 +4,16 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from selenium import webdriver
 from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template
 from scraper.AliExpressNavigator import Navigator
 from scraper.AliExpressItemScraper import ItemScraper
 from flask_cors import CORS
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import psycopg2
+from flask_wtf import FlaskForm
+from flask_wtf.csrf import CSRFProtect
+from wtforms import StringField, IntegerField, BooleanField, SubmitField
+from forms import AliExpressSearchForm  # Importation du formulaire
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from wtforms import StringField, IntegerField, BooleanField, SubmitField
@@ -272,10 +277,13 @@ def search_on_aliexpress():
         for item in items:
             print(f"Scraping item : {item.get('id')}")
             detailedStore, detailedItem = itemScraper.fetchAllData(item.get('id'))
-            itemScraper.save_to_database(detailedStore, detailedItem, conn)
+            itemScraper.save_to_json(detailedStore, detailedItem)
         
         conn.close()
-        return jsonify({'message': message, 'items': items})
+    #     return jsonify({'message': message, 'items': items})
+    # except Exception as e:
+    #     return jsonify({'error': str(e)}), 500
+        return render_template('web_interface_result.html', message=message, items=items)
     except Exception as e:
         return render_template('web_interface_result.html', error=str(e))
 
@@ -313,6 +321,13 @@ def scrape_aliexpress_product():
             'item': item
         }
         
+    #     if result:
+    #         return jsonify(result), 200
+    #     else:
+    #         return jsonify({'error': 'Failed to fetch data'}), 500
+
+    # except Exception as e:
+    #     return jsonify({'error': str(e)}), 500
         conn.close()
 
     #     if result:
