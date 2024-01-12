@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -71,14 +71,14 @@
         
         <label for="choice_filter">{{ form.choice_filter.label }}</label>
         <select name="choice_filter">
-            <option value="activated">Activated</option>
-            <option value="deactivated">Deactivated</option>
+            <option value="false">Deactivated</option>
+            <option value="true">Activated</option>
         </select><br>
         
         <label for="plus_filter">{{ form.plus_filter.label }}</label>
         <select name="plus_filter">
-            <option value="activated">Activated</option>
-            <option value="deactivated">Deactivated</option>
+            <option value="false">Deactivated</option>
+            <option value="true">Activated</option>
         </select><br>
         
         <label for="free_shipping_filter">{{ form.free_shipping_filter.label }}</label> {{ form.free_shipping_filter() }}<br>
