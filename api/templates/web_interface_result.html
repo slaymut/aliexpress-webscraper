@@ -7,6 +7,19 @@
 </head>
 <body>
     <h1>AliExpress Web Interface Results</h1>
-    <p>{{ results }}</p>
+    <p>{{ message }}</p>
+    
+    <ul>
+        {% for data in dataFormatted %}
+            <li>
+                <h4><a href="https://fr.aliexpress.com/item/{{data.item.id}}.html">{{ data.item.title }}<a/></h4>
+                <p>Price: {{ data.item.price }}</p>
+                <p>Rating: {{ data.item.rating }}</p>
+                <p>Reviews: {{ data.item.reviewsNbr }}</p>
+                <p>Number sold: {{ data.item.sellsNbr }}</p>
+                <p>Trust Score: {{ data.item.trustScore }} - {{ data.item.trustworthiness }}</p>
+            </li>
+        {% endfor %}
+    </ul>
 </body>
 </html>

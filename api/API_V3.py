@@ -4,22 +4,15 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from selenium import webdriver
 from flask import Flask, request, jsonify, render_template
-from flask import Flask, request, jsonify, render_template
 from scraper.AliExpressNavigator import Navigator
 from scraper.AliExpressItemScraper import ItemScraper
 from flask_cors import CORS
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import psycopg2
-from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
-from wtforms import StringField, IntegerField, BooleanField, SubmitField
-from forms import AliExpressSearchForm  # Importation du formulaire
-from flask_wtf import FlaskForm
-from flask_wtf.csrf import CSRFProtect
-from wtforms import StringField, IntegerField, BooleanField, SubmitField
-from forms import AliExpressSearchForm  # Importation du formulaire
+from forms import AliExpressSearchForm
 
-print(f"Chemin de recherche Python dans API_V3.py : {sys.path}")
+# Configuration du webdriver
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors')
 options.add_argument('--incognito')
@@ -27,46 +20,39 @@ options.add_argument('--headless')
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 
-# Set the page load strategy to 'eager' or 'none'
 capabilities = DesiredCapabilities.CHROME
-capabilities["pageLoadStrategy"] = "eager"  # or "none"
+capabilities["pageLoadStrategy"] = "eager"
 
-# current_directory = os.getcwd()
-# parent_directory = os.path.dirname(current_directory)
-# chrome_driver_path = os.path.join(parent_directory, 'chrome-driver\\chromedriver.exe')
-
-# driver = webdriver.Chrome(executable_path=chrome_driver_path, options=options, desired_capabilities=capabilities)
-
+# Chemin du webdriver
 current_directory = os.getcwd()
 chrome_driver_path = os.path.join(current_directory, 'chrome-driver-docker/chromedriver')
 
 driver = webdriver.Chrome(executable_path=chrome_driver_path, options=options, desired_capabilities=capabilities)
 
+# Création de l'application Flask
 app = Flask(__name__)
 CORS(app)
 csrf = CSRFProtect(app)
 
 # Ajout d'une clé secrète
-app.config['SECRET_KEY'] = 'anitamaxwynn'  # Remplacez 'votre_cle_secrete' par une chaîne de caractères aléatoire et sécurisée
-csrf.init_app(app)  # Intégration de Flask-WTF CSRFProtect
+app.config['SECRET_KEY'] = 'anitamaxwynn'
+csrf.init_app(app)
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
     form = AliExpressSearchForm()
-
-    if form.validate_on_submit():
+    
+    if form.is_submitted():
         # Traitez les données du formulaire ici si le formulaire a été soumis
-        search_filter = form.searchFilter.data
-        num_pages = int(form.numPages.data)
-        choice_filter = form.choiceFilter.data
-        plus_filter = form.plusFilter.data
-        free_shipping_filter = form.freeShippingFilter.data
-        four_stars_and_up_filter = form.fourStarsAndUpFilter.data
+        search_filter = form.search_filter.data
+        num_pages = int(form.num_pages.data)
+        choice_filter = form.choice_filter.data
+        plus_filter = form.plus_filter.data
+        free_shipping_filter = form.free_shipping_filter.data
+        four_stars_and_up_filter = form.four_stars_and_up_filter.data
         maximum = float(form.maximum.data)
         minimum = float(form.minimum.data)
-        sort_criteria = form.sortCriteria.data
-        
-        # Ajout ici de la logique pour effectuer la recherche sur AliExpress
+        sort_criteria = form.sort_criteria.data
 
         # Initialisation de l'objet Navigator
         navigator = Navigator(driver)
@@ -98,50 +84,83 @@ def home():
 
         elif sort_criteria == 'sell_highest':
             items = navigator.getMostSelledItems(items, 10)
-
+            
         elif sort_criteria == 'rating_highest':
             items = navigator.getBestRatedItems(items, 10)
             
         else:
             # Aucun tri spécifié, utilisez le tri par défaut (par ordre d'apparition dans les pages)
+            items = navigator.getBestItems(items, 10)
             pass
 
-        # Exemple de sauvegarde en JSON
-        itemScraper = ItemScraper(driver)
-        for item in items:
-            detailedStore, detailedItem = itemScraper.fetchAllData(item.get('id'))
-            itemScraper.save_to_json(detailedStore, detailedItem)
 
-        # Utilisez les données du formulaire (search_filter, num_pages, etc.) dans votre recherche
+        itemScraper = ItemScraper(driver)
+        
+        conn = psycopg2.connect(
+            dbname="aliexpressdb",
+            user="user",
+            password="password",
+            host="postgresdb" 
+        )
+        cursor = conn.cursor()
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS stores (
+            id VARCHAR(255) PRIMARY KEY,
+            name VARCHAR(255),
+            reviewPercentage FLOAT,
+            isChoiceStore BOOLEAN,
+            isPlusStore BOOLEAN,
+            isGoldStore BOOLEAN,
+            followers INT,
+            trustScore FLOAT,
+            trustworthiness VARCHAR(255)
+        )
+        """)
+        conn.commit()
+        cursor.close()
+
+        cursor = conn.cursor()
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS items (
+            id VARCHAR(255) PRIMARY KEY,
+            title VARCHAR(255),
+            price FLOAT,
+            valuePrice FLOAT,
+            shippingPrice FLOAT,
+            deliveryTime INT,
+            deliveryDates VARCHAR(255),
+            rating FLOAT,
+            reviewsNbr INT,
+            sellsNbr INT,
+            freeShippingAfter FLOAT,
+            trustScore FLOAT,
+            trustworthiness VARCHAR(255),
+            isChoice BOOLEAN,
+            isPlus BOOLEAN,
+            store VARCHAR(255),
+            FOREIGN KEY (store) REFERENCES stores(id)
+        )
+        """)
+        conn.commit()
+        cursor.close()
+        
+        dataFormatted = []
+        for item in items:
+            print(f"Scraping item : {item.get('id')}")
+            detailedStore, detailedItem = itemScraper.fetchAllData(item.get('id'))
+            dataFormatted.append({
+                'store': detailedStore,
+                'item': detailedItem
+            })
+            itemScraper.save_to_database(detailedStore, detailedItem, conn)
+            
+        conn.close()
 
         # Redirection de l'utilisateur vers une autre page
-        return render_template('web_interface_result.html', message="Scraping completed successfully!", items=items)
+        return render_template('web_interface_result.html', message="Scraping completed successfully!", data=dataFormatted)
 
     # Si la méthode n'est pas POST, ou si la validation du formulaire échoue
     return render_template('web_interface.html', form=form)
-
-
-
-# Initialiser la session Spark
-# spark = SparkSession.builder \
-#     .appName("SparkHadoopAPI") \
-#     .getOrCreate()
-
-@app.route('/test', methods=['GET'])
-def test():
-    conn = psycopg2.connect(
-        dbname="aliexpressdb",
-        user="user",
-        password="password",
-        host="postgresdb"  # This is the service name defined in docker-compose.yml
-    )
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM stores")
-    records = cursor.fetchall()
-    cursor.close()
-    conn.close()
-        
-    return jsonify(records)
 
 #Endpoint pour faire les Best-of Items
 # @app.route('/best-of-items', methods=['GET'])
@@ -152,140 +171,6 @@ def test():
 # @app.route('/best-of-store', methods=['GET'])
 # def get_best_stores():
 #     return
-
-# Endpoint pour effectuer une recherche sur AliExpress
-@app.route('/search', methods=['POST'])
-def search_on_aliexpress():
-    try:
-        # Récupérer les paramètres de la recherche depuis le corps de la demande
-        # search_params = request.json
-        # search_filter = search_params.get('searchFilter', '')
-        # num_pages = search_params.get('numPages', 1)  # Nouveau paramètre pour le nombre de pages
-        # choice_filter = search_params.get('choiceFilter', False)
-        # plus_filter = search_params.get('plusFilter', False)
-        # free_shipping_filter = search_params.get('freeShippingFilter', False)
-        # four_stars_and_up_filter = search_params.get('fourStarsAndUpFilter', False)
-        # maximum = search_params.get('maximum', 0)
-        # minimum = search_params.get('minimum', 0)
-    
-        # Récupérer les paramètres de la recherche depuis le formulaire web
-        search_filter = request.form.get('searchFilter', '')
-        num_pages = int(request.form.get('numPages', 1))  # Nouveau paramètre pour le nombre de pages
-        choice_filter = request.form.get('choiceFilter', False)
-        plus_filter = request.form.get('plusFilter', False)
-        free_shipping_filter = request.form.get('freeShippingFilter', False)
-        four_stars_and_up_filter = request.form.get('fourStarsAndUpFilter', False)
-        maximum = float(request.form.get('maximum', 0))
-        minimum = float(request.form.get('minimum', 0))
-        sort_criteria = request.form.get('sortCriteria', 'default')
-
-        # Initialiser l'objet Navigator
-        navigator = Navigator(driver)
-
-        # Charger les résultats de la recherche pour le nombre spécifié de pages
-        message = ''
-        items = []
-        for page in range(1, num_pages + 1):
-            page_items = navigator.loadPageResults(
-                search_filter,
-                page=page,
-                choiceFilter=choice_filter,
-                plusFilter=plus_filter,
-                freeShippingFilter=free_shipping_filter,
-                fourStarsAndUpFilter=four_stars_and_up_filter,
-                maximum=maximum,
-                minimum=minimum
-            )
-
-            # Arrêter le scraping si moins de 60 articles sont récupérés sur une page
-
-            items.extend(page_items)
-            if len(page_items) < 60:
-                message = f"Le scraping a été interrompu sur la page {page} sur {num_pages} demandées car nous avons atteint le maximum de pages disponibles."
-                break
-            else:
-                message = f"Le scraping a été effectué sur les {num_pages} pages."
-
-        # Switch case simulé avec des conditions if-elif-else
-        # sort_criteria = search_params.get('sortCriteria', 'default')
-
-        if sort_criteria == 'best_offers':
-            items = navigator.getBestItems(items, 10)
-
-        elif sort_criteria == 'sell_highest':
-            items = navigator.getMostSelledItems(items, 10)
-            
-        elif sort_criteria == 'rating_highest':
-            items = navigator.getBestRatedItems(items, 10)
-            
-        else:
-            # Aucun tri spécifié, utilisez le tri par défaut (par ordre d'apparition dans les pages)
-            # items = navigator.getBestItems(items, 10)
-            pass
-        
-        itemScraper = ItemScraper(driver)
-        # Create the stores table
-        conn = psycopg2.connect(
-            dbname="aliexpressdb",
-            user="user",
-            password="password",
-            host="postgresdb"  # This is the service name defined in docker-compose.yml
-        )
-        cursor = conn.cursor()
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS stores (
-            id VARCHAR(255) PRIMARY KEY,
-            name VARCHAR(255),
-            review_percentage FLOAT,
-            is_choice_store BOOLEAN,
-            is_plus_store BOOLEAN,
-            is_gold_store BOOLEAN,
-            followers INT,
-            trust_score FLOAT,
-            trustworthiness VARCHAR(255)
-        )
-        """)
-        conn.commit()
-        cursor.close()
-
-        # Create the items table
-        cursor = conn.cursor()
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS items (
-            id VARCHAR(255) PRIMARY KEY,
-            title VARCHAR(255),
-            price FLOAT,
-            value_price FLOAT,
-            shipping_price FLOAT,
-            delivery_time INT,
-            delivery_dates VARCHAR(255),
-            rating FLOAT,
-            reviews_nbr INT,
-            sells_nbr INT,
-            free_shipping_after FLOAT,
-            trust_score FLOAT,
-            trustworthiness VARCHAR(255),
-            is_choice BOOLEAN,
-            is_plus BOOLEAN,
-            store_id VARCHAR(255),
-            FOREIGN KEY (store_id) REFERENCES stores(id)
-        )
-        """)
-        conn.commit()
-        cursor.close()
-        
-        for item in items:
-            print(f"Scraping item : {item.get('id')}")
-            detailedStore, detailedItem = itemScraper.fetchAllData(item.get('id'))
-            itemScraper.save_to_json(detailedStore, detailedItem)
-        
-        conn.close()
-    #     return jsonify({'message': message, 'items': items})
-    # except Exception as e:
-    #     return jsonify({'error': str(e)}), 500
-        return render_template('web_interface_result.html', message=message, items=items)
-    except Exception as e:
-        return render_template('web_interface_result.html', error=str(e))
 
 
 # Endpoint pour le scraping d'un produit AliExpress

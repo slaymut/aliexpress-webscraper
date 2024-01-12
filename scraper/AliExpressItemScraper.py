@@ -14,8 +14,6 @@ import re
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import json
-import json
 
 class ItemScraper:
   def __init__(self, driver):
@@ -299,118 +297,86 @@ class ItemScraper:
       print(f"Erreur lors de l'extraction des données du produit : {e}")
       return None  
       
-  # def save_to_csv(self, store, item, itemFileName="items_data.csv", storeFilename="stores_data.csv"):
-  #   try:
-  #     aliexpressStore = AliExpressStore(
-  #       name=store['name'],
-  #       reviewPercentage=store['reviewPercentage'],
-  #       isChoiceStore=store['isChoiceStore'],
-  #       isPlusStore=store['isPlusStore'],
-  #       isGoldStore=store['isGoldStore'],
-  #       followers=store['followers'],
-  #       id=store['id'],
-  #       trustScore=store['trustScore'],
-  #       trustworthiness=store['trustworthiness']
-  #     )
+  def save_to_database(self, store, item, conn):
+    try:
+      aliexpressStore = AliExpressStore(
+        id=store['id'],
+        name=store['name'],
+        reviewPercentage=store['reviewPercentage'],
+        isChoiceStore=store['isChoiceStore'],
+        isPlusStore=store['isPlusStore'],
+        isGoldStore=store['isGoldStore'],
+        followers=store['followers'],
+        trustScore=store['trustScore'],
+        trustworthiness=store['trustworthiness']
+      )
+
+      # Insert the AliExpressStore object into the database
+      cursor = conn.cursor()
+      cursor.execute("""
+        INSERT INTO stores (id, name, reviewPercentage, isChoiceStore, isPlusStore, isGoldStore, followers, trustScore, trustworthiness)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+      """, (
+        aliexpressStore.id,
+        aliexpressStore.name,
+        aliexpressStore.reviewPercentage,
+        aliexpressStore.isChoiceStore,
+        aliexpressStore.isPlusStore,
+        aliexpressStore.isGoldStore,
+        aliexpressStore.followers,
+        aliexpressStore.trustScore,
+        aliexpressStore.trustworthiness
+      ))
+      conn.commit()
+      cursor.close()
       
-  #     aliexpressItem = AliExpressItem(
-  #       id=item['id'],
-  #       title=item['title'],
-  #       price=item['price'],
-  #       valuePrice=item['valuePrice'] if 'valuePrice' in item else None,
-  #       shippingPrice=item['shippingPrice'] if 'shippingPrice' in item else None,
-  #       deliveryTime=item['deliveryTime'] if 'deliveryTime' in item else None,
-  #       deliveryDates=item['deliveryDates'] if 'deliveryDates' in item else None,
-  #       rating=item['rating'] if 'rating' in item else None,
-  #       reviewsNbr=item['reviewsNbr'] if 'reviewsNbr' in item else None,
-  #       sellsNbr=item['sellsNbr'] if 'sellsNbr' in item else None,
-  #       freeShippingAfter=item['freeShippingAfter'] if 'freeShippingAfter' in item else None,
-  #       trustScore=item['trustScore'],
-  #       trustworthiness=item['trustworthiness'],
-  #       isChoice=item['isChoice'],
-  #       isPlus=item['isPlus'],
-  #       store=aliexpressStore.id
-  #     )
-  #     file_exists = os.path.isfile(storeFilename)
-  #     with open(storeFilename, 'a', newline='', encoding='utf-8') as file:
-  #       writer = csv.writer(file)
-        
-  #       if not file_exists:
-  #         writer.writerow(list(aliexpressStore.__dict__.keys()))
+      aliexpressItem = AliExpressItem(
+        id=item['id'],
+        title=item['title'],
+        price=item['price'],
+        valuePrice=item['valuePrice'] if 'valuePrice' in item else None,
+        shippingPrice=item['shippingPrice'] if 'shippingPrice' in item else None,
+        deliveryTime=item['deliveryTime'] if 'deliveryTime' in item else None,
+        deliveryDates=item['deliveryDates'] if 'deliveryDates' in item else None,
+        rating=item['rating'] if 'rating' in item else None,
+        reviewsNbr=item['reviewsNbr'] if 'reviewsNbr' in item else None,
+        sellsNbr=item['sellsNbr'] if 'sellsNbr' in item else None,
+        freeShippingAfter=item['freeShippingAfter'] if 'freeShippingAfter' in item else None,
+        trustScore=item['trustScore'],
+        trustworthiness=item['trustworthiness'],
+        isChoice=item['isChoice'],
+        isPlus=item['isPlus'],
+        store=aliexpressStore.id
+      )
 
-  #       writer.writerow(list(aliexpressStore.__dict__.values()))
-  #       print("Store saved to CSV file.")
-      
-  #     file_exists = os.path.isfile(itemFileName)
-  #     with open(itemFileName, 'a', newline='', encoding='utf-8') as file:
-  #       writer = csv.writer(file)
-        
-  #       if not file_exists:
-  #         writer.writerow(list(aliexpressItem.__dict__.keys()))
-
-  #       writer.writerow(list(aliexpressItem.__dict__.values()))
-  #       print("Item saved to CSV file.")
-  #   except Exception as e:
-  #     print(f"Error while saving to CSV file: {e}")
-
-  def save_to_json(self, store, item, itemFileName="items_data.json", storeFilename="stores_data.json"):
-      try:
-          aliexpressStore = AliExpressStore(
-              name=store['name'],
-              reviewPercentage=store['reviewPercentage'],
-              isChoiceStore=store['isChoiceStore'],
-              isPlusStore=store['isPlusStore'],
-              isGoldStore=store['isGoldStore'],
-              followers=store['followers'],
-              id=store['id'],
-              trustScore=store['trustScore'],
-              trustworthiness=store['trustworthiness']
-          )
-
-          aliexpressItem = AliExpressItem(
-              id=item['id'],
-              title=item['title'],
-              price=item['price'],
-              valuePrice=item['valuePrice'] if 'valuePrice' in item else None,
-              shippingPrice=item['shippingPrice'] if 'shippingPrice' in item else None,
-              deliveryTime=item['deliveryTime'] if 'deliveryTime' in item else None,
-              deliveryDates=item['deliveryDates'] if 'deliveryDates' in item else None,
-              rating=item['rating'] if 'rating' in item else None,
-              reviewsNbr=item['reviewsNbr'] if 'reviewsNbr' in item else None,
-              sellsNbr=item['sellsNbr'] if 'sellsNbr' in item else None,
-              freeShippingAfter=item['freeShippingAfter'] if 'freeShippingAfter' in item else None,
-              trustScore=item['trustScore'],
-              trustworthiness=item['trustworthiness'],
-              isChoice=item['isChoice'],
-              isPlus=item['isPlus'],
-              store=aliexpressStore.id
-          )
-
-          # Save store to JSON file
-          with open(storeFilename, 'a', encoding='utf-8') as file:
-              if file.tell() == 0:
-                  file.write("[\n")
-              else:
-                  file.write(",\n")
-
-              json.dump(aliexpressStore.__dict__, file, ensure_ascii=False)
-
-          print("Store saved to JSON file.")
-
-          # Save item to JSON file
-          with open(itemFileName, 'a', encoding='utf-8') as file:
-              if file.tell() == 0:
-                  file.write("[\n")
-              else:
-                  file.write(",\n")
-
-              json.dump(aliexpressItem.__dict__, file, ensure_ascii=False)
-
-          print("Item saved to JSON file.")
-
-      except Exception as e:
-          print(f"Error while saving to JSON file: {e}")
-
+      # Insert the AliExpressItem object into the database
+      cursor = conn.cursor()
+      cursor.execute("""
+        INSERT INTO items (id, title, price, valuePrice, shippingPrice, deliveryTime, deliveryDates, rating, reviewsNbr, sellsNbr, freeShippingAfter, trustScore, trustworthiness, isChoice, isPlus, store)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+      """, (
+        aliexpressItem.id,
+        aliexpressItem.title,
+        aliexpressItem.price,
+        aliexpressItem.valuePrice,
+        aliexpressItem.shippingPrice,
+        aliexpressItem.deliveryTime,
+        aliexpressItem.deliveryDates,
+        aliexpressItem.rating,
+        aliexpressItem.reviewsNbr,
+        aliexpressItem.sellsNbr,
+        aliexpressItem.freeShippingAfter,
+        aliexpressItem.trustScore,
+        aliexpressItem.trustworthiness,
+        aliexpressItem.isChoice,
+        aliexpressItem.isPlus,
+        aliexpressItem.store
+      ))
+      conn.commit()
+      cursor.close()
+      print("Item & store saved to database.")
+    except Exception as e:
+      print(f"Error: Item & store not saved to database.: {e}")
     
 
   def fetchAllData(self, product_id):
@@ -432,4 +398,4 @@ class ItemScraper:
     if store and item:
       return store, item
     else:
-      print(f"Failed to fetch store or item data for product {product_id}. Data not saved to JSON.")
+      print(f"Failed to fetch store or item data for product {product_id}. Data not saved to CSV.")
