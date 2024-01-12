@@ -1,21 +1,6 @@
 # Use an official Python runtime as a parent image
 FROM python:3.8-slim-buster
 
-# # Install necessary packages and Chrome
-# RUN apt-get update && apt-get install -y \
-#   wget \
-#   gnupg2 \
-#   unzip \
-#   curl \
-#   && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-#   && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
-
-# # Install ChromeDriver
-# RUN apt-get update
-# RUN apt-get install -yqq unzip
-# RUN wget -O https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/120.0.6099.109/linux64/chromedriver-linux64.zip
-# RUN unzip chromedriver-linux64.zip -d /usr/local/bin/
-
 # Install necessary packages and Chrome
 RUN apt-get update && apt-get install -y \
   wget \
@@ -27,6 +12,10 @@ RUN echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/so
 
 # Install Chrome
 RUN apt-get update && apt-get install -y google-chrome-stable
+
+RUN apt-get update && apt-get install -y libpq-dev \
+  build-essential \
+  postgresql-server-dev-all
 
 # Set the working directory in the container to /app
 WORKDIR /app

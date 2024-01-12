@@ -6,15 +6,15 @@ from selenium import webdriver
 from flask import Flask, request, jsonify
 from scraper.AliExpressNavigator import Navigator
 from scraper.AliExpressItemScraper import ItemScraper
-from pyspark.sql import SparkSession
 from flask_cors import CORS
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+import psycopg2
 
 print(f"Chemin de recherche Python dans API_V3.py : {sys.path}")
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors')
 options.add_argument('--incognito')
-# options.add_argument('--headless')
+options.add_argument('--headless')
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 
@@ -22,16 +22,16 @@ options.add_argument("--disable-dev-shm-usage")
 capabilities = DesiredCapabilities.CHROME
 capabilities["pageLoadStrategy"] = "eager"  # or "none"
 
+# current_directory = os.getcwd()
+# parent_directory = os.path.dirname(current_directory)
+# chrome_driver_path = os.path.join(parent_directory, 'chrome-driver\\chromedriver.exe')
+
+# driver = webdriver.Chrome(executable_path=chrome_driver_path, options=options, desired_capabilities=capabilities)
+
 current_directory = os.getcwd()
-parent_directory = os.path.dirname(current_directory)
-chrome_driver_path = os.path.join(parent_directory, 'chrome-driver\\chromedriver.exe')
+chrome_driver_path = os.path.join(current_directory, 'chrome-driver-docker/chromedriver')
 
 driver = webdriver.Chrome(executable_path=chrome_driver_path, options=options, desired_capabilities=capabilities)
-
-# current_directory = os.getcwd()
-# chrome_driver_path = os.path.join(current_directory, 'chrome-driver-copy/chromedriver')
-
-# driver = webdriver.Chrome(executable_path=chrome_driver_path, options=options)
 
 app = Flask(__name__)
 CORS(app)
@@ -44,6 +44,46 @@ def hello():
 # spark = SparkSession.builder \
 #     .appName("SparkHadoopAPI") \
 #     .getOrCreate()
+
+@app.route('/test', methods=['GET'])
+def test():
+    # Create a table
+    def create_table():
+        conn = psycopg2.connect(
+            dbname="aliexpressdb",
+            user="user",
+            password="password",
+            host="postgresdb"  # This is the service name defined in docker-compose.yml
+        )
+        cursor = conn.cursor()
+        cursor.execute("CREATE TABLE IF NOT EXISTS items (id SERIAL PRIMARY KEY, name VARCHAR(255), price FLOAT)")
+        cursor.execute("INSERT INTO items (name, price) VALUES (%s, %s)", ("Test", 10.2))
+        cursor.execute("INSERT INTO items (name, price) VALUES (%s, %s)", ("Test2", 20.2))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+    # Select all records from the table
+    def select_all():
+        conn = psycopg2.connect(
+            dbname="aliexpressdb",
+            user="user",
+            password="password",
+            host="postgresdb"  # This is the service name defined in docker-compose.yml
+        )
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM items")
+        records = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return jsonify(records)
+
+    # Call the functions
+    create_table()
+    result = select_all()
+    
+    return result
 
 #Endpoint pour faire les Best-of Items
 @app.route('/best-of-items', methods=['GET'])
