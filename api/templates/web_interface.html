@@ -94,18 +94,25 @@
             <option value="activated">Activé</option>
         </select><br>
         
-        <label for="maximum">{{ form.maximum.label }}</label> {{ form.maximum(value=0) }}<br>
-        <label for="minimum">{{ form.minimum.label }}</label> {{ form.minimum(value=0) }}<br>
+        {% comment %} <label for="maximum">{{ form.maximum.label }}</label> {{ form.maximum(value=0) }}<br>
+        <label for="minimum">{{ form.minimum.label }}</label> {{ form.minimum(value=0) }}<br> {% endcomment %}
 
         
         <label for="sort_criteria">{{ form.sort_criteria.label }}</label>
         <select name="sort_criteria">
-            <option value="best_offers">Meilleur offres</option>
-            <option value="sell_highest">Meilleur ventes</option>
-            <option value="rating_highest">Meilleur notes</option>
+            <option value="best_offers">Meilleures offres</option>
+            <option value="sell_highest">Meilleures ventes</option>
+            <option value="rating_highest">Meilleures notes</option>
         </select><br>
         
-        <input type="submit" value="{{ form.submit.label }}">
+        <input type="submit" value="Rechercher">
+
+    </form>
+    <form method="get" action="/best-trustscore-items">
+        <input type="submit" value="Rechercher les meilleurs items">
+    </form>
+    <form method="get" action="/best-rated-stores">
+        <input type="submit" value="Rechercher les meilleurs magasins">
     </form>
 </body>
 </html>

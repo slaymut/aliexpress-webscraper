@@ -8,9 +8,9 @@ from scraper.AliExpressNavigator import Navigator
 from scraper.AliExpressItemScraper import ItemScraper
 from flask_cors import CORS
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-import psycopg2
 from flask_wtf.csrf import CSRFProtect
 from forms import AliExpressSearchForm
+import psycopg2
 
 # Configuration du webdriver
 options = webdriver.ChromeOptions()
@@ -50,8 +50,8 @@ def home():
         plus_filter = form.plus_filter.data
         free_shipping_filter = form.free_shipping_filter.data
         four_stars_and_up_filter = form.four_stars_and_up_filter.data
-        maximum = float(form.maximum.data)
-        minimum = float(form.minimum.data)
+        # maximum = float(form.maximum.data)
+        # minimum = float(form.minimum.data)
         sort_criteria = form.sort_criteria.data
 
         # Initialisation de l'objet Navigator
@@ -67,9 +67,7 @@ def home():
                 choiceFilter=choice_filter,
                 plusFilter=plus_filter,
                 freeShippingFilter=free_shipping_filter,
-                fourStarsAndUpFilter=four_stars_and_up_filter,
-                maximum=maximum,
-                minimum=minimum
+                fourStarsAndUpFilter=four_stars_and_up_filter
             )
             items.extend(page_items)
 
@@ -96,7 +94,6 @@ def home():
             items = navigator.getBestItems(items, 10)
             type = f"Nous avons scrapé pour vous les 10 meilleures offres selon la fiabilité !"
             pass
-
 
         itemScraper = ItemScraper(driver)
         
@@ -166,29 +163,82 @@ def home():
     # Si la méthode n'est pas POST, ou si la validation du formulaire échoue
     return render_template('web_interface.html', form=form)
 
-#Endpoint pour faire les Best-of Items
-# @app.route('/best-of-items', methods=['GET'])
-# def get_best_items():
-#     return
+# Endpoint for retrieving the best rated stores
+@app.route('/best-rated-stores', methods=['GET'])
+def get_best_stores():
+    # Connect to the PostgreSQL database
+    conn = psycopg2.connect(
+        dbname="aliexpressdb",
+        user="user",
+        password="password",
+        host="postgresdb" 
+    )
+    
+    # Create a cursor object to execute SQL queries
+    cur = conn.cursor()
+    
+    # Execute the SQL query to retrieve the best rated stores
+    cur.execute("SELECT * FROM stores ORDER BY trustScore DESC LIMIT 10")
+    
+    # Fetch all the rows returned by the query
+    rows = cur.fetchall()
+    
+    # Get the column names from the cursor description
+    column_names = [desc[0] for desc in cur.description]
+    
+    # Create a list of dictionaries where each dictionary represents a row with column names as keys
+    data = [dict(zip(column_names, row)) for row in rows]
+    
+    # Close the cursor and the database connection
+    cur.close()
+    conn.close()
+    
+    # Return the retrieved stores as JSON response
+    return render_template('web_interface_result_stores.html', 
+                           type="Voici les magasins les plus fiables et meilleurs notés", 
+                           allData=data)
 
-# #Endpoint pour faire les Best-Of Stores
-# @app.route('/best-of-store', methods=['GET'])
-# def get_best_stores():
-#     return
-
+# Endpoint for retrieving items with the best trustScore to price ratio
+@app.route('/best-trustscore-items', methods=['GET'])
+def get_best_trustscore_items():
+    # Connect to the PostgreSQL database
+    conn = psycopg2.connect(
+        dbname="aliexpressdb",
+        user="user",
+        password="password",
+        host="postgresdb" 
+    )
+    
+    # Create a cursor object to execute SQL queries
+    cur = conn.cursor()
+    
+    # Execute the SQL query to retrieve items with the best trustScore to price ratio
+    cur.execute("SELECT * FROM items ORDER BY trustScore/price DESC LIMIT 10")
+    
+    # Fetch all the rows returned by the query
+    rows = cur.fetchall()
+    
+        # Get the column names from the cursor description
+    column_names = [desc[0] for desc in cur.description]
+    
+    # Create a list of dictionaries where each dictionary represents a row with column names as keys
+    data = [dict(zip(column_names, row)) for row in rows]
+    
+    # Close the cursor and the database connection
+    cur.close()
+    conn.close()
+    
+    # Return the retrieved items as JSON response
+    return render_template('web_interface_result_items.html', 
+                           type="Voici les articles avec le meilleur rapport trustScore/prix parmis les meilleurs items sauvegardés!", 
+                           allData=data)
 
 # Endpoint pour le scraping d'un produit AliExpress
 @app.route('/scrape_aliexpress_product', methods=['POST'])
 def scrape_aliexpress_product():
     try:
-        # Obtenez le produit ID à partir de la requête POST
-        # data = request.get_json()
-        # product_id = data.get('product_id')
-
-        # Obtenez le produit ID à partir du formulaire web
         product_id = request.form.get('product_id')
 
-        # Vérifiez si l'ID du produit est présent
         if not product_id:
             return jsonify({'error': 'Product ID is required'}), 400
 
@@ -201,7 +251,7 @@ def scrape_aliexpress_product():
             dbname="aliexpressdb",
             user="user",
             password="password",
-            host="postgresdb"  # This is the service name defined in docker-compose.yml
+            host="postgresdb"
         )
         scraper_instance.save_to_database(store, item, conn)
         
@@ -210,29 +260,14 @@ def scrape_aliexpress_product():
             'item': item
         }
         
-    #     if result:
-    #         return jsonify(result), 200
-    #     else:
-    #         return jsonify({'error': 'Failed to fetch data'}), 500
-
-    # except Exception as e:
-    #     return jsonify({'error': str(e)}), 500
         conn.close()
 
-    #     if result:
-    #         return jsonify(result), 200
-    #     else:
-    #         return jsonify({'error': 'Failed to fetch data'}), 500
-
-    # except Exception as e:
-    #     return jsonify({'error': str(e)}), 500
         if result:
             return render_template('web_interface_result.html', result=result)
         else:
             return render_template('web_interface_result.html', error='Failed to fetch data')
     except Exception as e:
         return render_template('web_interface_result.html', error=str(e))
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

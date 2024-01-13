@@ -125,43 +125,38 @@ class ItemScraper:
       
   # Fetch the store data
   def fetchStoreData(self, soup: BeautifulSoup):
-    try:
-      isChoiceStore = self.isChoiceStore(soup)
-      isPlusStore = self.isPlusStore(soup)
-      isGoldStore = self.isGoldStore(soup)
-      
-      storeName = self.fetchElement(soup, 'a', attrs={'data-pl': 'store-name'})
-      storeId = storeName['href'].split('store/')[1]
-      feedbackElem = self.fetchElement(
-        soup, 'div', attrs={'class': 'store-header--text--yxM1iTQ'}
-      )
-      
-      feedback = None
-      percentage = 0
-      followers = 0
-      
-      if feedbackElem:
-        feedback = feedbackElem.findChildren("strong", recursive=False)
-        percentage = float(feedback[0].text.strip('%'))
-        followers = format_follower_count(feedback[1].text)
-      
-      store = {
-        'id': storeId,
-        'name': storeName.text,
-        'reviewPercentage': percentage,
-        'isChoiceStore': isChoiceStore,
-        'isPlusStore': isPlusStore,
-        'isGoldStore': isGoldStore,
-        'followers': followers,
-        'trustScore': 0,
-        'trustworthiness': 'Très peu fiable'
-      }
-      
-      self.checkStoreLegitimacy(store)
-      return store
-    except Exception as e:
-      print(f"Erreur lors de l'extraction des données du magasin : {e}")
-      return None
+    isChoiceStore = self.isChoiceStore(soup)
+    isPlusStore = self.isPlusStore(soup)
+    isGoldStore = self.isGoldStore(soup)
+    
+    storeName = self.fetchElement(soup, 'a', attrs={'data-pl': 'store-name'})
+    storeId = storeName['href'].split('store/')[1]
+    feedbackElem = self.fetchElement(
+      soup, 'div', attrs={'class': 'store-header--text--yxM1iTQ'}
+    )
+    
+    percentage = 0
+    followers = 0
+    
+    if feedbackElem:
+      feedback = feedbackElem.findChildren("strong", recursive=False)
+      percentage = float(feedback[0].text.strip('%'))
+      followers = format_follower_count(feedback[1].text)
+    
+    store = {
+      'id': storeId,
+      'name': storeName.text,
+      'reviewPercentage': percentage,
+      'isChoiceStore': isChoiceStore,
+      'isPlusStore': isPlusStore,
+      'isGoldStore': isGoldStore,
+      'followers': followers,
+      'trustScore': 0,
+      'trustworthiness': 'Très peu fiable'
+    }
+    
+    self.checkStoreLegitimacy(store)
+    return store
     
   # Fetch the shipping data for classic labeled products
   def fetchShippingDataClassic(self, soup: BeautifulSoup, item):
@@ -232,70 +227,58 @@ class ItemScraper:
     
   # Fetch the product data
   def fetchItemData(self, soup: BeautifulSoup, product_id):
-    try:
-      title = self.fetchElement(soup, 'h1', attrs={'data-pl': 'product-title'})
-      
-      itemValue = self.fetchElement(soup, 'span', attrs={'class': 'price--originalText--Zsc6sMv'})
-      itemPrice = self.fetchElement(soup, 'div', attrs={'class': 'product-price-current'})
-      likes = self.fetchElement(soup, 'span', attrs={'class': 'share-and-wish--wishText--g_o_zG7'})
-      
-      # Extract Product Review
-      productReview = self.fetchElement(soup, 'div', attrs={'data-pl': 'product-reviewer'})
+    title = self.fetchElement(soup, 'h1', attrs={'data-pl': 'product-title'})
+    
+    itemValue = self.fetchElement(soup, 'span', attrs={'class': 'price--originalText--Zsc6sMv'})
+    itemPrice = self.fetchElement(soup, 'div', attrs={'class': 'product-price-current'})
+    
+    # Extract Product Review
+    productReview = self.fetchElement(soup, 'div', attrs={'data-pl': 'product-reviewer'})
 
-      rating = 0
-      reviewNumber = 0
-      sellsNumber = 0
+    rating = 0
+    reviewNumber = 0
+    sellsNumber = 0
 
-      if productReview:
-        rating_element = productReview.findChild("strong", recursive=False)
-        if rating_element:
-          rating = rating_element.text.strip()
+    if productReview:
+      rating_element = productReview.findChild("strong", recursive=False)
+      if rating_element:
+        rating = rating_element.text.strip()
 
-        reviewNumber_element = productReview.findChild("a", recursive=False)
-        if reviewNumber_element:
-          reviewNumber = reviewNumber_element.text.split(' ')[0].strip()
+      reviewNumber_element = productReview.findChild("a", recursive=False)
+      if reviewNumber_element:
+        reviewNumber = reviewNumber_element.text.split(' ')[0].strip()
 
-        sellsNumber_elements = productReview.findChildren("span", recursive=False)
-        if len(sellsNumber_elements):
-          numbers = re.findall(r'\d+', sellsNumber_elements[-1].text)
+      sellsNumber_elements = productReview.findChildren("span", recursive=False)
+      if len(sellsNumber_elements) > 0:
+        numbers = re.findall(r'\d+', sellsNumber_elements[-1].text)
+        if numbers:
           sellsNumber = int(''.join(numbers))
+    
+    isChoice = self.isChoice(soup)
+    isPlus = self.isPlus(soup)
+    
+    item = {
+      'id': product_id,
+      'title': title.text,
+      'price': float(itemPrice.text.replace(' ', '').strip('€').replace(',', '.')),
+      'valuePrice': float(itemValue.text.replace(' ', '').strip('€').replace(',', '.')),
+      'shippingPrice': 0,
+      'deliveryTime': 0,
+      'deliveryDates': [],
+      'rating': float(rating),
+      'reviewsNbr': int(reviewNumber),
+      'sellsNbr': sellsNumber,
+      'isChoice': isChoice,
+      'isPlus': isPlus
+    }
+    
+    if isChoice:
+      self.fetchShippingDataChoice(soup, item)
+    else:
+      self.fetchShippingDataClassic(soup, item)
       
-      isChoice = self.isChoice(soup)
-      isPlus = self.isPlus(soup)
-      
-      # print(f"Title: {title.text}")
-      # print(f"Discount Price: {itemPrice.text}")
-      # print(f"Real Price: {itemValue.text}")
-      # print(f"Likes: {likes.text}")
-      # print(f"Rating: {rating}")
-      # print(f"Reviews: {reviewNumber}")
-      # print(f"Sells: {sellsNumber}")
-      
-      item = {
-        'id': product_id,
-        'title': title.text,
-        'price': float(itemPrice.text.replace(' ', '').strip('€').replace(',', '.')),
-        'valuePrice': float(itemValue.text.replace(' ', '').strip('€').replace(',', '.')),
-        'shippingPrice': 0,
-        'deliveryTime': 0,
-        'deliveryDates': [],
-        'rating': float(rating),
-        'reviewsNbr': int(reviewNumber),
-        'sellsNbr': sellsNumber,
-        'isChoice': isChoice,
-        'isPlus': isPlus
-      }
-      
-      if isChoice:
-        self.fetchShippingDataChoice(soup, item)
-      else:
-        self.fetchShippingDataClassic(soup, item)
-        
-      self.checkProductLegitimacy(item)
-      return item
-    except Exception as e:
-      print(f"Erreur lors de l'extraction des données du produit : {e}")
-      return None  
+    self.checkProductLegitimacy(item)
+    return item
       
   def save_to_database(self, store, item, conn):
     try:

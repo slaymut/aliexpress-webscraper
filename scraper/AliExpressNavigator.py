@@ -233,7 +233,6 @@ class Navigator:
     else:
       actualPage = ''
       
-      
     url = f"https://fr.aliexpress.com/w/wholesale-{encodedSearchFilter}.html?{actualPage}g=y&SearchText={encodedSearchFilter}{selectedSwitches}"
 
     # Navigate to the website

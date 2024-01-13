@@ -74,21 +74,14 @@
 <body>
     <h1>Résultats de la recherche:</h1>
     <h2>{{ type }}</h2>
-    <h3>{{ message }}</h3>
     
     <ul>
         {% for data in allData %}
             <li>
-                <p><strong>Produit :</strong></p>
-                <h4><a href="https://fr.aliexpress.com/item/{{data.item.id}}.html">{{ data.item.title }}<a/></h4>
-                <p class="price">Prix: {{ data.item.price }}€ pour {{ data.item.sellsNbr }} ventes</p>
-                <p class="rating">Avis: {{ data.item.rating }} étoiles pour {{ data.item.reviewsNbr }} avis</p>
-                <p class="trustScore">Score de fiabilité: {{ data.item.trustScore }} - {{ data.item.trustworthiness }}</p>
-                <br>
-                <p><strong>Magasin :</strong></p>
-                <h4><a href="https://fr.aliexpress.com/store/{{data.store.id}}">{{ data.store.name }}<a/></h4>
-                <p class="price">Pourcentage d'avis positifs: {{ data.store.reviewPercentage }}% pour {{ data.store.followers }} followers</p>
-                <p class="trustScore">Score de fiabilité: {{ data.store.trustScore }} - {{ data.store.trustworthiness }}</p>
+                <h4><a href="https://fr.aliexpress.com/item/{{data.id}}.html">{{ data.title }}<a/></h4>
+                <p class="price">Prix: {{ data.price }}€ pour {{ data.sellsnbr }} ventes</p>
+                <p class="rating">Avis: {{ data.rating }} étoiles pour {{ data.reviewsnbr }} avis</p>
+                <p class="trustScore">Score de fiabilité: {{ data.trustscore }} - {{ data.trustworthiness }}</p>
             </li>
         {% endfor %}
     </ul>
