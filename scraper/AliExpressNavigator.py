@@ -231,8 +231,12 @@ class Navigator:
 
     self.driver.get(url)
     
-    wait = WebDriverWait(self.driver, 10)
-    wait.until(EC.presence_of_element_located((By.ID, "card-list")))
+    try:
+      wait = WebDriverWait(self.driver, 10)
+      wait.until(EC.presence_of_element_located((By.ID, "card-list")))
+    except TimeoutException:
+      # Handle the case where "card-list" element is not found
+      return []  # Return an empty list or handle it as per your requirement
     
     self.loadFullPage()
 
