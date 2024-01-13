@@ -98,9 +98,6 @@ class ItemScraper:
         store['trustScore'] += 5 if store['trustScore'] < 95 else 0
       store['trustworthiness'] = trustworthiness
       
-    # print("Store Trust Score: ", store['trustScore'])
-    # print("Store Trustworthiness: ", store['trustworthiness'])
-      
   # Check if the product is a legit product
   def checkProductLegitimacy(self, item):
     if item['isChoice']:
@@ -119,9 +116,6 @@ class ItemScraper:
       item['trustworthiness'] = trustworthiness
       if item['isPlus']:
         item['trustScore'] += 15 if item['trustScore'] < 85 else 0
-      
-    # print("Score de confiance du produit: ", item['trustScore'])
-    # print("Fiabilité du produit: ", item['trustworthiness'])
       
   # Fetch the store data
   def fetchStoreData(self, soup: BeautifulSoup):
@@ -164,7 +158,6 @@ class ItemScraper:
     shippingDeliveryInfos = self.fetchElements(soup, 'div', attrs={'class': 'dynamic-shipping-line dynamic-shipping-contentLayout'})
     
     if shippingPrice:
-      # Extract shipping price
       shipping_price_match = re.search(r'Livraison:\s+([\d,]+)€', shippingPrice.text)
       if shipping_price_match:
         shipping_price = shipping_price_match.group(1)
@@ -174,36 +167,27 @@ class ItemScraper:
     
     if shippingDeliveryInfos:
       for info in shippingDeliveryInfos:
-        # Extract delivery time
         delivery_time_match = re.search(r'Livraison en (\d+) jours', info.text)
         if delivery_time_match:
           delivery_time = delivery_time_match.group(1)
           item['deliveryTime'] = int(delivery_time)
         
-        # Extract delivery date
         if "livraison le" in info.text or "livrée d'ici le" in info.text or "entre le" in info.text:
           result = info.text.split("le", 1)[-1].strip()
           item['deliveryDates'].append(result)
-    
-    # print(f"Shipping Price: {item['shippingPrice']}")
-    # print(f"Delivery Time: {item['deliveryTime']}")
-    # print(f"Delivery Date: {item['deliveryDates']}")
         
-    
   # Fetch the shipping data for choice labeled products
   def fetchShippingDataChoice(self, soup: BeautifulSoup, item):
     shippings = self.fetchElements(soup, 'div', attrs={'class': 'dynamic-shipping-line dynamic-shipping-contentLayout'})
     
     if shippings:
       for shipping in shippings:
-        # Extract shipping price
         shipping_price_match = re.search(r'Livraison:\s+([\d,]+)€', shipping.text)
         
         if shipping_price_match:
           shipping_price = shipping_price_match.group(1)
           item['shippingPrice'] = float(shipping_price.replace(',', '.'))
           
-          # Extract free shipping information
           free_shipping_match = re.search(r'ou gratuite dès ([\d,]+)€', shipping.text)
           if free_shipping_match:
             free_shipping_threshold = free_shipping_match.group(1)
@@ -213,17 +197,11 @@ class ItemScraper:
         else:
           item['shippingPrice']  = None
 
-        # Extract delivery time
         delivery_time_match = re.search(r'Livré en (\d+) jours', shipping.text)
         if delivery_time_match:
           delivery_time = delivery_time_match.group(1)
           item['deliveryTime'] = int(delivery_time)
           item['deliveryDates'].append(shipping.text.split("le", 1)[-1].strip())
-    
-    # print(f"Shipping Price: {item['shippingPrice']}")
-    # print(f"Delivery Time: {item['deliveryTime']}")
-    # print(f"Delivery Date: {item['deliveryDates']}")
-    # print(f"Free Shipping Threshold: {item['freeShippingAfter']}")
     
   # Fetch the product data
   def fetchItemData(self, soup: BeautifulSoup, product_id):
@@ -232,7 +210,6 @@ class ItemScraper:
     itemValue = self.fetchElement(soup, 'span', attrs={'class': 'price--originalText--Zsc6sMv'})
     itemPrice = self.fetchElement(soup, 'div', attrs={'class': 'product-price-current'})
     
-    # Extract Product Review
     productReview = self.fetchElement(soup, 'div', attrs={'data-pl': 'product-reviewer'})
 
     rating = 0
@@ -294,7 +271,6 @@ class ItemScraper:
         trustworthiness=store['trustworthiness']
       )
 
-      # Insert the AliExpressStore object into the database
       cursor = conn.cursor()
       cursor.execute("""
         INSERT INTO stores (id, name, reviewPercentage, isChoiceStore, isPlusStore, isGoldStore, followers, trustScore, trustworthiness)
@@ -332,7 +308,6 @@ class ItemScraper:
         store=aliexpressStore.id
       )
 
-      # Insert the AliExpressItem object into the database
       cursor = conn.cursor()
       cursor.execute("""
         INSERT INTO items (id, title, price, valuePrice, shippingPrice, deliveryTime, deliveryDates, rating, reviewsNbr, sellsNbr, freeShippingAfter, trustScore, trustworthiness, isChoice, isPlus, store)
@@ -365,14 +340,11 @@ class ItemScraper:
   def fetchAllData(self, product_id):
     url = f"https://fr.aliexpress.com/item/{product_id}.html"
     
-    # Navigate to the website
     self.driver.get(url)
     
     wait = WebDriverWait(self.driver, 10)
     wait.until(EC.presence_of_element_located((By.CLASS_NAME, "pdp-body-top-right")))
     
-    print("meow")
-    # Use BeautifulSoup to parse the HTML content
     soup = BeautifulSoup(self.driver.page_source, 'html.parser')
     
     store = self.fetchStoreData(soup)
@@ -381,4 +353,4 @@ class ItemScraper:
     if store and item:
       return store, item
     else:
-      print(f"Failed to fetch store or item data for product {product_id}. Data not saved to CSV.")
+      print(f"Failed to fetch store or item data for product {product_id}.")
