@@ -85,7 +85,7 @@ class ItemScraper:
   def checkStoreLegitimacy(self, store):
     if store['isChoiceStore']:
       store['trustScore'] = 90
-      store['trustworthiness'] = 'Highly Trustworthy. Recommended By AliExpress as a Choice Store.'
+      store['trustworthiness'] = 'Très fiable. Recommandé par AliExpress en tant que magasin de choix.'
     else:
       percentage = store['reviewPercentage']
       followers = store['followers']
@@ -98,14 +98,11 @@ class ItemScraper:
         store['trustScore'] += 5 if store['trustScore'] < 95 else 0
       store['trustworthiness'] = trustworthiness
       
-    # print("Store Trust Score: ", store['trustScore'])
-    # print("Store Trustworthiness: ", store['trustworthiness'])
-      
   # Check if the product is a legit product
   def checkProductLegitimacy(self, item):
     if item['isChoice']:
       item['trustScore'] = 90
-      item['trustworthiness'] = 'Highly Trustworthy. Recommended By AliExpress as a Choice Product.'
+      item['trustworthiness'] = 'Très fiable. Recommandé par AliExpress en tant que produit de choix.'
     else:
       rating = item['rating']
       reviews_nbr = item['reviewsNbr']
@@ -120,48 +117,40 @@ class ItemScraper:
       if item['isPlus']:
         item['trustScore'] += 15 if item['trustScore'] < 85 else 0
       
-    # print("Product Trust Score: ", item['trustScore'])
-    # print("Product Trustworthiness: ", item['trustworthiness'])
-      
   # Fetch the store data
   def fetchStoreData(self, soup: BeautifulSoup):
-    try:
-      isChoiceStore = self.isChoiceStore(soup)
-      isPlusStore = self.isPlusStore(soup)
-      isGoldStore = self.isGoldStore(soup)
-      
-      storeName = self.fetchElement(soup, 'a', attrs={'data-pl': 'store-name'})
-      storeId = storeName['href'].split('store/')[1]
-      feedbackElem = self.fetchElement(
-        soup, 'div', attrs={'class': 'store-header--text--yxM1iTQ'}
-      )
-      
-      feedback = None
-      percentage = 0
-      followers = 0
-      
-      if feedbackElem:
-        feedback = feedbackElem.findChildren("strong", recursive=False)
-        percentage = float(feedback[0].text.strip('%'))
-        followers = format_follower_count(feedback[1].text)
-      
-      store = {
-        'id': storeId,
-        'name': storeName.text,
-        'reviewPercentage': percentage,
-        'isChoiceStore': isChoiceStore,
-        'isPlusStore': isPlusStore,
-        'isGoldStore': isGoldStore,
-        'followers': followers,
-        'trustScore': 0,
-        'trustworthiness': 'Highly Untrustworthy'
-      }
-      
-      self.checkStoreLegitimacy(store)
-      return store
-    except Exception as e:
-      print(f"Erreur lors de l'extraction des données du magasin : {e}")
-      return None
+    isChoiceStore = self.isChoiceStore(soup)
+    isPlusStore = self.isPlusStore(soup)
+    isGoldStore = self.isGoldStore(soup)
+    
+    storeName = self.fetchElement(soup, 'a', attrs={'data-pl': 'store-name'})
+    storeId = storeName['href'].split('store/')[1]
+    feedbackElem = self.fetchElement(
+      soup, 'div', attrs={'class': 'store-header--text--yxM1iTQ'}
+    )
+    
+    percentage = 0
+    followers = 0
+    
+    if feedbackElem:
+      feedback = feedbackElem.findChildren("strong", recursive=False)
+      percentage = float(feedback[0].text.strip('%'))
+      followers = format_follower_count(feedback[1].text)
+    
+    store = {
+      'id': storeId,
+      'name': storeName.text,
+      'reviewPercentage': percentage,
+      'isChoiceStore': isChoiceStore,
+      'isPlusStore': isPlusStore,
+      'isGoldStore': isGoldStore,
+      'followers': followers,
+      'trustScore': 0,
+      'trustworthiness': 'Très peu fiable'
+    }
+    
+    self.checkStoreLegitimacy(store)
+    return store
     
   # Fetch the shipping data for classic labeled products
   def fetchShippingDataClassic(self, soup: BeautifulSoup, item):
@@ -169,7 +158,6 @@ class ItemScraper:
     shippingDeliveryInfos = self.fetchElements(soup, 'div', attrs={'class': 'dynamic-shipping-line dynamic-shipping-contentLayout'})
     
     if shippingPrice:
-      # Extract shipping price
       shipping_price_match = re.search(r'Livraison:\s+([\d,]+)€', shippingPrice.text)
       if shipping_price_match:
         shipping_price = shipping_price_match.group(1)
@@ -179,36 +167,27 @@ class ItemScraper:
     
     if shippingDeliveryInfos:
       for info in shippingDeliveryInfos:
-        # Extract delivery time
         delivery_time_match = re.search(r'Livraison en (\d+) jours', info.text)
         if delivery_time_match:
           delivery_time = delivery_time_match.group(1)
           item['deliveryTime'] = int(delivery_time)
         
-        # Extract delivery date
         if "livraison le" in info.text or "livrée d'ici le" in info.text or "entre le" in info.text:
           result = info.text.split("le", 1)[-1].strip()
           item['deliveryDates'].append(result)
-    
-    # print(f"Shipping Price: {item['shippingPrice']}")
-    # print(f"Delivery Time: {item['deliveryTime']}")
-    # print(f"Delivery Date: {item['deliveryDates']}")
         
-    
   # Fetch the shipping data for choice labeled products
   def fetchShippingDataChoice(self, soup: BeautifulSoup, item):
     shippings = self.fetchElements(soup, 'div', attrs={'class': 'dynamic-shipping-line dynamic-shipping-contentLayout'})
     
     if shippings:
       for shipping in shippings:
-        # Extract shipping price
         shipping_price_match = re.search(r'Livraison:\s+([\d,]+)€', shipping.text)
         
         if shipping_price_match:
           shipping_price = shipping_price_match.group(1)
           item['shippingPrice'] = float(shipping_price.replace(',', '.'))
           
-          # Extract free shipping information
           free_shipping_match = re.search(r'ou gratuite dès ([\d,]+)€', shipping.text)
           if free_shipping_match:
             free_shipping_threshold = free_shipping_match.group(1)
@@ -218,84 +197,65 @@ class ItemScraper:
         else:
           item['shippingPrice']  = None
 
-        # Extract delivery time
         delivery_time_match = re.search(r'Livré en (\d+) jours', shipping.text)
         if delivery_time_match:
           delivery_time = delivery_time_match.group(1)
           item['deliveryTime'] = int(delivery_time)
           item['deliveryDates'].append(shipping.text.split("le", 1)[-1].strip())
     
-    # print(f"Shipping Price: {item['shippingPrice']}")
-    # print(f"Delivery Time: {item['deliveryTime']}")
-    # print(f"Delivery Date: {item['deliveryDates']}")
-    # print(f"Free Shipping Threshold: {item['freeShippingAfter']}")
-    
   # Fetch the product data
   def fetchItemData(self, soup: BeautifulSoup, product_id):
-    try:
-      title = self.fetchElement(soup, 'h1', attrs={'data-pl': 'product-title'})
-      
-      itemValue = self.fetchElement(soup, 'span', attrs={'class': 'price--originalText--Zsc6sMv'})
-      itemPrice = self.fetchElement(soup, 'div', attrs={'class': 'product-price-current'})
-      likes = self.fetchElement(soup, 'span', attrs={'class': 'share-and-wish--wishText--g_o_zG7'})
-      
-      # Extract Product Review
-      productReview = self.fetchElement(soup, 'div', attrs={'data-pl': 'product-reviewer'})
+    title = self.fetchElement(soup, 'h1', attrs={'data-pl': 'product-title'})
+    
+    itemValue = self.fetchElement(soup, 'span', attrs={'class': 'price--originalText--Zsc6sMv'})
+    itemPrice = self.fetchElement(soup, 'div', attrs={'class': 'product-price-current'})
+    
+    productReview = self.fetchElement(soup, 'div', attrs={'data-pl': 'product-reviewer'})
 
-      rating = 0
-      reviewNumber = 0
-      sellsNumber = 0
+    rating = 0
+    reviewNumber = 0
+    sellsNumber = 0
 
-      if productReview:
-        rating_element = productReview.findChild("strong", recursive=False)
-        if rating_element:
-          rating = rating_element.text.strip()
+    if productReview:
+      rating_element = productReview.findChild("strong", recursive=False)
+      if rating_element:
+        rating = rating_element.text.strip()
 
-        reviewNumber_element = productReview.findChild("a", recursive=False)
-        if reviewNumber_element:
-          reviewNumber = reviewNumber_element.text.split(' ')[0].strip()
+      reviewNumber_element = productReview.findChild("a", recursive=False)
+      if reviewNumber_element:
+        reviewNumber = reviewNumber_element.text.split(' ')[0].strip()
 
-        sellsNumber_elements = productReview.findChildren("span", recursive=False)
-        if len(sellsNumber_elements):
-          numbers = re.findall(r'\d+', sellsNumber_elements[-1].text)
+      sellsNumber_elements = productReview.findChildren("span", recursive=False)
+      if len(sellsNumber_elements) > 0:
+        numbers = re.findall(r'\d+', sellsNumber_elements[-1].text)
+        if numbers:
           sellsNumber = int(''.join(numbers))
+    
+    isChoice = self.isChoice(soup)
+    isPlus = self.isPlus(soup)
+    
+    item = {
+      'id': product_id,
+      'title': title.text,
+      'price': float(itemPrice.text.replace(' ', '').strip('€').replace(',', '.')),
+      'valuePrice': float(itemValue.text.replace(' ', '').strip('€').replace(',', '.')),
+      'shippingPrice': 0,
+      'deliveryTime': 0,
+      'deliveryDates': [],
+      'rating': float(rating),
+      'reviewsNbr': int(reviewNumber),
+      'sellsNbr': sellsNumber,
+      'isChoice': isChoice,
+      'isPlus': isPlus
+    }
+    
+    if isChoice:
+      self.fetchShippingDataChoice(soup, item)
+    else:
+      self.fetchShippingDataClassic(soup, item)
       
-      isChoice = self.isChoice(soup)
-      isPlus = self.isPlus(soup)
-      
-      # print(f"Title: {title.text}")
-      # print(f"Discount Price: {itemPrice.text}")
-      # print(f"Real Price: {itemValue.text}")
-      # print(f"Likes: {likes.text}")
-      # print(f"Rating: {rating}")
-      # print(f"Reviews: {reviewNumber}")
-      # print(f"Sells: {sellsNumber}")
-      
-      item = {
-        'id': product_id,
-        'title': title.text,
-        'price': float(itemPrice.text.replace(' ', '').strip('€').replace(',', '.')),
-        'valuePrice': float(itemValue.text.replace(' ', '').strip('€').replace(',', '.')),
-        'shippingPrice': 0,
-        'deliveryTime': 0,
-        'deliveryDates': [],
-        'rating': float(rating),
-        'reviewsNbr': int(reviewNumber),
-        'sellsNbr': sellsNumber,
-        'isChoice': isChoice,
-        'isPlus': isPlus
-      }
-      
-      if isChoice:
-        self.fetchShippingDataChoice(soup, item)
-      else:
-        self.fetchShippingDataClassic(soup, item)
-        
-      self.checkProductLegitimacy(item)
-      return item
-    except Exception as e:
-      print(f"Erreur lors de l'extraction des données du produit : {e}")
-      return None  
+    self.checkProductLegitimacy(item)
+    return item
       
   def save_to_database(self, store, item, conn):
     try:
@@ -311,10 +271,9 @@ class ItemScraper:
         trustworthiness=store['trustworthiness']
       )
 
-      # Insert the AliExpressStore object into the database
       cursor = conn.cursor()
       cursor.execute("""
-        INSERT INTO stores (id, name, review_percentage, is_choice_store, is_plus_store, is_gold_store, followers, trust_score, trustworthiness)
+        INSERT INTO stores (id, name, reviewPercentage, isChoiceStore, isPlusStore, isGoldStore, followers, trustScore, trustworthiness)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
       """, (
         aliexpressStore.id,
@@ -349,10 +308,9 @@ class ItemScraper:
         store=aliexpressStore.id
       )
 
-      # Insert the AliExpressItem object into the database
       cursor = conn.cursor()
       cursor.execute("""
-        INSERT INTO items (id, title, price, value_price, shipping_price, delivery_time, delivery_dates, rating, reviews_nbr, sells_nbr, free_shipping_after, trust_score, trustworthiness, is_choice, is_plus, store_id)
+        INSERT INTO items (id, title, price, valuePrice, shippingPrice, deliveryTime, deliveryDates, rating, reviewsNbr, sellsNbr, freeShippingAfter, trustScore, trustworthiness, isChoice, isPlus, store)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
       """, (
         aliexpressItem.id,
@@ -382,14 +340,11 @@ class ItemScraper:
   def fetchAllData(self, product_id):
     url = f"https://fr.aliexpress.com/item/{product_id}.html"
     
-    # Navigate to the website
     self.driver.get(url)
     
     wait = WebDriverWait(self.driver, 10)
     wait.until(EC.presence_of_element_located((By.CLASS_NAME, "pdp-body-top-right")))
     
-    print("meow")
-    # Use BeautifulSoup to parse the HTML content
     soup = BeautifulSoup(self.driver.page_source, 'html.parser')
     
     store = self.fetchStoreData(soup)
@@ -398,4 +353,4 @@ class ItemScraper:
     if store and item:
       return store, item
     else:
-      print(f"Failed to fetch store or item data for product {product_id}. Data not saved to CSV.")
+      print(f"Failed to fetch store or item data for product {product_id}.")

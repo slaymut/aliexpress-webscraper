@@ -60,22 +60,22 @@ def format_follower_count(follower_count):
   
 def classify_trustworthiness(trust_score):
   if trust_score >= 90:
-    return 'Highly Trustworthy'
+    return 'Très fiable'
   elif trust_score >= 80:
-    return 'Very Trustworthy'
+    return 'Très fiable'
   elif trust_score >= 70:
-    return 'Trustworthy'
+    return 'Fiable'
   elif trust_score >= 60:
-    return 'Somewhat Trustworthy'
+    return 'Assez fiable'
   elif trust_score >= 50:
-    return 'Neutral Trustworthiness'
+    return 'Confiance neutre'
   elif trust_score >= 40:
-    return 'Questionable Trustworthiness'
+    return 'Fiabilité douteuse'
   elif trust_score >= 30:
-    return 'Low Trustworthiness'
+    return 'Faible fiabilité'
   elif trust_score >= 20:
-    return 'Very Low Trustworthiness'
+    return 'Très faible fiabilité'
   elif trust_score >= 10:
-    return 'Untrustworthy'
+    return 'Peu fiable'
   else:
-    return 'Highly Untrustworthy'
+    return 'Très peu fiable'

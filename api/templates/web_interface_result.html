@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Résultats de la recherche</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            background-color: #4285f4;
+            color: #fff;
+            padding: 20px;
+            margin: 0;
+        }
+
+        h2 {
+            margin: 10px 0;
+            color: #333;
+        }
+
+        h3 {
+            margin: 10px 0;
+            color: #777;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            border: 1px solid #ddd;
+            margin: 10px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        a {
+            color: #4285f4;
+        }
+
+        h4 {
+            margin: 10px 0;
+            color: #333;
+        }
+
+        p {
+            margin: 5px 0;
+            color: #777;
+        }
+
+        p.price {
+            font-weight: bold;
+        }
+
+        p.rating {
+            color: #f44336;
+        }
+
+        p.trustScore {
+            color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Résultats de la recherche:</h1>
+    <h2>{{ type }}</h2>
+    <h3>{{ message }}</h3>
+    
+    <ul>
+        {% for data in allData %}
+            <li>
+                <p><strong>Produit :</strong></p>
+                <h4><a href="https://fr.aliexpress.com/item/{{data.item.id}}.html">{{ data.item.title }}<a/></h4>
+                <p class="price">Prix: {{ data.item.price }}€ pour {{ data.item.sellsNbr }} ventes</p>
+                <p class="rating">Avis: {{ data.item.rating }} étoiles pour {{ data.item.reviewsNbr }} avis</p>
+                <p class="trustScore">Score de fiabilité: {{ data.item.trustScore }} - {{ data.item.trustworthiness }}</p>
+                <br>
+                <p><strong>Magasin :</strong></p>
+                <h4><a href="https://fr.aliexpress.com/store/{{data.store.id}}">{{ data.store.name }}<a/></h4>
+                <p class="price">Pourcentage d'avis positifs: {{ data.store.reviewPercentage }}% pour {{ data.store.followers }} followers</p>
+                <p class="trustScore">Score de fiabilité: {{ data.store.trustScore }} - {{ data.store.trustworthiness }}</p>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

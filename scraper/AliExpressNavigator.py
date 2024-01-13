@@ -30,16 +30,14 @@ class Navigator:
     while len(lazy_load_items) and current_height <= total_height:
       self.driver.execute_script(f"window.scrollTo(0, {current_height});")
       
-      # Check if there are lazy-load items
       lazy_load_items = self.driver.find_elements_by_class_name('lazy-load')
       if len(lazy_load_items):
         try:
-          # Wait until the items on lazy load are loaded
           section_locator = (By.CLASS_NAME, 'lazy-load')
           WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(section_locator))
         except TimeoutException:
           break
-        # Scroll down by one-fourth of the page height
+        
         current_height += height_iteration
     
     lazy_load_items = self.driver.find_elements_by_class_name('lazy-load')
@@ -119,11 +117,11 @@ class Navigator:
       if choice:
         itemFormatted['isChoice'] = True
         itemFormatted['trustScore'] = 90
-        itemFormatted['trustworthiness'] = 'Very Trustworthy. Choice Item'
+        itemFormatted['trustworthiness'] = 'Très fiable. Article de choix'
       elif plus:
         itemFormatted['isPlus'] = True
         itemFormatted['trustScore'] = 80
-        itemFormatted['trustworthiness'] = 'Trustworthy. Plus Item'
+        itemFormatted['trustworthiness'] = 'Fiable. Article Plus'
       else:
         itemFormatted['isChoice'] = False
         itemFormatted['isPlus'] = False
@@ -134,7 +132,7 @@ class Navigator:
       itemFormatted['isChoice'] = False
       itemFormatted['isPlus'] = False
       itemFormatted['trustScore'] = 0
-      itemFormatted['trustworthiness'] = 'Highly Untrustworthy. No Shipping Information'
+      itemFormatted['trustworthiness'] = 'Très peu fiable. Aucune information sur la livraison'
       
     # Get the store name
     itemFormatted['store'] = item.find('span', attrs={'class': 'cards--store--3GyJcot'}).text.strip()
@@ -144,16 +142,13 @@ class Navigator:
   def getBestItems(self, items, number_of_items=10):
     def trustToPriceRatio(item):
       total_price = item['priceSold']
-      # If ShippingPrice Is Available
       if item['shippingPrice'] is not None:
         total_price += item['shippingPrice']
 
-      # Avoid division by zero
       if total_price == 0:
         return 0
       return item['trustScore'] / total_price
 
-    # Sort items based on trust score to total price ratio
     sorted_items = sorted(items, key=trustToPriceRatio, reverse=True)
     
     return sorted_items[:number_of_items]
@@ -176,10 +171,10 @@ class Navigator:
     
     return sorted_items[:number_of_items]
   
+  # Unused. Get the items between two prices
   def getItemsBetweenPrices(self, items, minimum, maximum):
     def sort_by_price(item):
       total_price = item['priceSold']
-      # If ShippingPrice Is Available
       if item['shippingPrice'] is not None:
         total_price += item['shippingPrice']
       return total_price
@@ -189,7 +184,6 @@ class Navigator:
     items_between_prices = []
     for item in sorted_items:
       total_price = item['priceSold']
-      # If ShippingPrice Is Available
       if item['shippingPrice'] is not None:
         total_price += item['shippingPrice']
       
@@ -233,19 +227,15 @@ class Navigator:
     else:
       actualPage = ''
       
-      
     url = f"https://fr.aliexpress.com/w/wholesale-{encodedSearchFilter}.html?{actualPage}g=y&SearchText={encodedSearchFilter}{selectedSwitches}"
 
-    # Navigate to the website
     self.driver.get(url)
     
-    # Wait until the element with class "my-element" is loaded
     wait = WebDriverWait(self.driver, 10)
     wait.until(EC.presence_of_element_located((By.ID, "card-list")))
     
     self.loadFullPage()
 
-    # Use BeautifulSoup to parse the HTML content
     soup = BeautifulSoup(self.driver.page_source, 'html.parser')
 
     items = soup.find(
