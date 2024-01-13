@@ -14,6 +14,7 @@ import re
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import re
 
 class ItemScraper:
   def __init__(self, driver):
@@ -234,11 +235,21 @@ class ItemScraper:
     isChoice = self.isChoice(soup)
     isPlus = self.isPlus(soup)
     
+    price = 0
+    price_match = re.search(r'([\d.,]+)€$', itemPrice.text)
+    if price_match:
+      price = float(price_match.group(1).replace(',', '.'))
+    
+    price_match_lot = re.search(r'([\d.]+)€/lot', itemPrice.text)
+    price = float(price_match.group(1)) if price_match_lot else price
+    
+    priceValue = float(itemValue.text.replace(' ', '').strip('€').replace(',', '.')) if itemValue else None
+    
     item = {
       'id': product_id,
       'title': title.text,
-      'price': float(itemPrice.text.replace(' ', '').strip('€').replace(',', '.')),
-      'valuePrice': float(itemValue.text.replace(' ', '').strip('€').replace(',', '.')),
+      'price': price,
+      'valuePrice': priceValue,
       'shippingPrice': 0,
       'deliveryTime': 0,
       'deliveryDates': [],

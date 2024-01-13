@@ -59,6 +59,17 @@
             color: #4285f4;
             margin: 10px 0;
         }
+        
+        .error {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+        }
+        .chargement {
+            color: blue;
+            font-weight: bold;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -66,7 +77,7 @@
     <h2>Veuillez introduire vos critères de recherches</h2>
     <form method="post">
         {{ form.hidden_tag() }}
-        <label for="search_filter">{{ form.search_filter.label }}</label> {{ form.search_filter() }}<br>
+        <label for="search_filter">{{ form.search_filter.label }}</label> {{ form.search_filter(attrs={'placeholder': 'peluche'}) }}<br>
         <label for="num_pages">{{ form.num_pages.label }}</label> {{ form.num_pages() }}<br>
         
         <label for="choice_filter">{{ form.choice_filter.label }}</label>
@@ -102,13 +113,21 @@
         </select><br>
         
         <input type="submit" value="Rechercher">
-
+        <br>
+        <p>Note: Veuillez patienter après le début de la recherche. Le temps de scraping augmente avec les pages à scraper</p>
     </form>
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
     <form method="get" action="/best-trustscore-items">
-        <input type="submit" value="Rechercher les meilleurs items">
+        <p>Vous souhaitez savoir quels sont les 10 meilleurs item dans votre base données jusqu'à maintenant ?</p>
+        <p>Vous êtes au bon endroit !</p>
+        <input type="submit" value="Trouver les meilleurs items">
     </form>
     <form method="get" action="/best-rated-stores">
-        <input type="submit" value="Rechercher les meilleurs magasins">
+        <p>Vous souhaitez savoir quels sont les 10 meilleurs magasins dans votre base données jusqu'à maintenant ?</p>
+        <p>Vous êtes au bon endroit !</p>
+        <input type="submit" value="Trouver les meilleurs magasins">
     </form>
 </body>
 </html>

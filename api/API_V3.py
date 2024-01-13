@@ -41,11 +41,63 @@ csrf.init_app(app)
 @app.route('/', methods=['GET', 'POST'])
 def home():
     form = AliExpressSearchForm()
+    conn = psycopg2.connect(
+        dbname="aliexpressdb",
+        user="user",
+        password="password",
+        host="postgresdb" 
+    )
+    cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS stores (
+        id VARCHAR(255) PRIMARY KEY,
+        name VARCHAR(255),
+        reviewPercentage FLOAT,
+        isChoiceStore BOOLEAN,
+        isPlusStore BOOLEAN,
+        isGoldStore BOOLEAN,
+        followers INT,
+        trustScore FLOAT,
+        trustworthiness VARCHAR(255)
+    )
+    """)
+    conn.commit()
+    cursor.close()
+
+    cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS items (
+        id VARCHAR(255) PRIMARY KEY,
+        title VARCHAR(255),
+        price FLOAT,
+        valuePrice FLOAT,
+        shippingPrice FLOAT,
+        deliveryTime INT,
+        deliveryDates VARCHAR(255),
+        rating FLOAT,
+        reviewsNbr INT,
+        sellsNbr INT,
+        freeShippingAfter FLOAT,
+        trustScore FLOAT,
+        trustworthiness VARCHAR(255),
+        isChoice BOOLEAN,
+        isPlus BOOLEAN,
+        store VARCHAR(255),
+        FOREIGN KEY (store) REFERENCES stores(id)
+    )
+    """)
+    conn.commit()
+    cursor.close()
     
     if form.is_submitted():
         # Traitez les données du formulaire ici si le formulaire a été soumis
         search_filter = form.search_filter.data
-        num_pages = int(form.num_pages.data)
+        
+        # Vérifie si le filtre de recherche est vide
+        if not search_filter:
+            return render_template('web_interface.html', form=form, error="Veuillez entrer un filtre de recherche.")
+        
+        num_pages = int(form.num_pages.data) if form.num_pages.data else 1
         choice_filter = form.choice_filter.data
         plus_filter = form.plus_filter.data
         free_shipping_filter = form.free_shipping_filter.data
@@ -76,7 +128,10 @@ def home():
                 break
             else:
                 message = f"Le scraping a été effectué sur les {num_pages} pages."
-            
+        
+        if len(items) == 0:
+            return render_template('web_interface.html', form=form, error="Aucun résultat n'a été trouvé pour votre recherche.")
+        
         if sort_criteria == 'best_offers':
             items = navigator.getBestItems(items, 10)
             type = f"Nous avons scrapé pour vous les 10 meilleures offres selon la fiabilité !"
@@ -96,54 +151,6 @@ def home():
             pass
 
         itemScraper = ItemScraper(driver)
-        
-        conn = psycopg2.connect(
-            dbname="aliexpressdb",
-            user="user",
-            password="password",
-            host="postgresdb" 
-        )
-        cursor = conn.cursor()
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS stores (
-            id VARCHAR(255) PRIMARY KEY,
-            name VARCHAR(255),
-            reviewPercentage FLOAT,
-            isChoiceStore BOOLEAN,
-            isPlusStore BOOLEAN,
-            isGoldStore BOOLEAN,
-            followers INT,
-            trustScore FLOAT,
-            trustworthiness VARCHAR(255)
-        )
-        """)
-        conn.commit()
-        cursor.close()
-
-        cursor = conn.cursor()
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS items (
-            id VARCHAR(255) PRIMARY KEY,
-            title VARCHAR(255),
-            price FLOAT,
-            valuePrice FLOAT,
-            shippingPrice FLOAT,
-            deliveryTime INT,
-            deliveryDates VARCHAR(255),
-            rating FLOAT,
-            reviewsNbr INT,
-            sellsNbr INT,
-            freeShippingAfter FLOAT,
-            trustScore FLOAT,
-            trustworthiness VARCHAR(255),
-            isChoice BOOLEAN,
-            isPlus BOOLEAN,
-            store VARCHAR(255),
-            FOREIGN KEY (store) REFERENCES stores(id)
-        )
-        """)
-        conn.commit()
-        cursor.close()
         
         dataFormatted = []
         for item in items:
@@ -189,6 +196,11 @@ def get_best_stores():
     # Create a list of dictionaries where each dictionary represents a row with column names as keys
     data = [dict(zip(column_names, row)) for row in rows]
     
+    if len(data) == 0:
+        return render_template('web_interface_result_stores.html', 
+                           type="Aucun magasin n'a été trouvé pour l'instant..", 
+                           allData=data)
+    
     # Close the cursor and the database connection
     cur.close()
     conn.close()
@@ -223,6 +235,11 @@ def get_best_trustscore_items():
     
     # Create a list of dictionaries where each dictionary represents a row with column names as keys
     data = [dict(zip(column_names, row)) for row in rows]
+    
+    if len(data) == 0:
+        return render_template('web_interface_result_items.html', 
+                           type="Aucun article n'a été trouvé pour l'instant..", 
+                           allData=data)
     
     # Close the cursor and the database connection
     cur.close()
